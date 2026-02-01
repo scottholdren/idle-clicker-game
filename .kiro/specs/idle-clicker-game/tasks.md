@@ -39,13 +39,13 @@ This implementation plan breaks down the idle clicker game into discrete coding 
     - Define upgrade, prestige, and achievement data structures
     - _Requirements: 1.1, 3.1, 8.1, 9.1, 12.1_
   
-  - [ ] 3.2 Implement Zustand store for game state
+  - [x] 3.2 Implement Zustand store for game state
     - Create game state store with initial values
     - Implement basic state update functions
     - Add state persistence configuration
     - _Requirements: 5.1, 5.2_
   
-  - [ ] 3.3 Implement core Game Engine class
+  - [x] 3.3 Implement core Game Engine class
     - Create GameEngine with basic initialization
     - Implement game loop and update mechanisms
     - Add state validation and error handling
