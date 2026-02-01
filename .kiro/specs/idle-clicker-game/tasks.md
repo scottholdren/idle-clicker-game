@@ -72,7 +72,7 @@ This implementation plan breaks down the idle clicker game into discrete coding 
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 6. Upgrade System
-  - [ ] 6.1 Implement Upgrade Manager
+  - [x] 6.1 Implement Upgrade Manager
     - Create Upgrade and UpgradeEffect classes
     - Implement purchase validation and cost calculation
     - Add exponential cost scaling with configurable multipliers
@@ -86,7 +86,7 @@ This implementation plan breaks down the idle clicker game into discrete coding 
     - **Property 4: Exponential Cost Scaling**
     - **Validates: Requirements 3.3**
   
-  - [ ] 6.4 Create upgrade UI components
+  - [x] 6.4 Create upgrade UI components
     - Build upgrade list component with purchase buttons
     - Add upgrade tooltips with cost, benefit, and requirement information
     - Implement visual indicators for available upgrades

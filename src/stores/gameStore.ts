@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import Decimal from 'decimal.js'
 import type { GameState, GameSettings, SerializableGameState, SaveData } from '../types/gameTypes'
 import { decimal, ZERO, ONE } from '../utils/decimal'
+import { INITIAL_UPGRADES } from '../data/upgrades'
 
 /**
  * Default game settings
@@ -178,16 +179,36 @@ function deserializeGameState(serialized: SerializableGameState): GameState {
     offlineProgressRate: serialized.offlineProgressRate,
     maxOfflineHours: serialized.maxOfflineHours,
     
-    upgrades: serialized.upgrades.map(upgrade => ({
-      ...upgrade,
-      baseCost: decimal(upgrade.baseCost),
-      costMultiplier: decimal(upgrade.costMultiplier),
-      effect: {
-        ...upgrade.effect,
-        value: decimal(upgrade.effect.value),
-        apply: () => {}, // Will be restored by game engine
-      },
-    })),
+    upgrades: serialized.upgrades.map(upgrade => {
+      // Find the original upgrade definition to restore functions
+      const originalUpgrade = INITIAL_UPGRADES.find(orig => orig.id === upgrade.id)
+      if (!originalUpgrade) {
+        console.warn(`Original upgrade definition not found for ${upgrade.id}`)
+        return {
+          ...upgrade,
+          baseCost: decimal(upgrade.baseCost),
+          costMultiplier: decimal(upgrade.costMultiplier),
+          effect: {
+            ...upgrade.effect,
+            value: decimal(upgrade.effect.value),
+            apply: () => {}, // Fallback empty function
+          },
+          unlockCondition: () => true, // Fallback always unlocked
+        }
+      }
+      
+      return {
+        ...upgrade,
+        baseCost: decimal(upgrade.baseCost),
+        costMultiplier: decimal(upgrade.costMultiplier),
+        effect: {
+          ...upgrade.effect,
+          value: decimal(upgrade.effect.value),
+          apply: originalUpgrade.effect.apply, // Restore original function
+        },
+        unlockCondition: originalUpgrade.unlockCondition, // Restore original function
+      }
+    }),
     purchasedUpgrades: new Set(serialized.purchasedUpgrades),
     
     prestigePoints: decimal(serialized.prestigePoints),
@@ -466,6 +487,25 @@ export const usePrestigePoints = () => useGameStore((state) => state.gameState.p
 export const useMetaPrestigePoints = () => useGameStore((state) => state.gameState.metaPrestigePoints)
 export const useAchievements = () => useGameStore((state) => state.gameState.achievements)
 export const useAutomation = () => useGameStore((state) => state.gameState.automationSystems)
+
+/**
+ * Derived selectors for upgrades
+ */
+export const useAvailableUpgrades = () => {
+  const upgrades = useUpgrades()
+  const currency = useCurrency()
+  
+  // This will trigger re-render when currency or upgrades change
+  return upgrades.filter(upgrade => 
+    upgrade.unlocked && 
+    upgrade.currentPurchases < upgrade.maxPurchases
+  )
+}
+
+export const useVisibleUpgrades = () => {
+  const upgrades = useUpgrades()
+  return upgrades.filter(upgrade => upgrade.unlocked)
+}
 
 /**
  * Action hooks

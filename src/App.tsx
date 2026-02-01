@@ -1,4 +1,5 @@
 import { ClickButton } from './components/ClickButton'
+import { UpgradeList } from './components/UpgradeList'
 import { useCurrency } from './stores/gameStore'
 import { formatNumber } from './utils/numberFormatter'
 import './App.css'
@@ -18,6 +19,10 @@ function App() {
       <main className="app-main">
         <div className="click-section">
           <ClickButton />
+        </div>
+        
+        <div className="upgrade-section">
+          <UpgradeList />
         </div>
       </main>
     </div>

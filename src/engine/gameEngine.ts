@@ -12,6 +12,7 @@ import type {
 } from '../types/gameTypes'
 import { useGameStore } from '../stores/gameStore'
 import { decimal, add, multiply, greaterThanOrEqual, ZERO, ONE } from '../utils/decimal'
+import { UpgradeManager } from '../managers/UpgradeManager'
 
 /**
  * Core Game Engine implementation
@@ -19,8 +20,10 @@ import { decimal, add, multiply, greaterThanOrEqual, ZERO, ONE } from '../utils/
 export class GameEngine implements IGameEngine {
   private updateInterval: number | null = null
   private lastUpdateTime: number = Date.now()
+  private upgradeManager: UpgradeManager
 
   constructor() {
+    this.upgradeManager = new UpgradeManager()
     this.startGameLoop()
   }
 
@@ -57,6 +60,13 @@ export class GameEngine implements IGameEngine {
     const now = Date.now()
     const deltaTime = (now - this.lastUpdateTime) / 1000 // Convert to seconds
     this.lastUpdateTime = now
+
+    // Initialize upgrades if needed
+    const state = this.getGameState()
+    this.upgradeManager.initializeUpgrades(state)
+    
+    // Update upgrade unlock conditions
+    this.upgradeManager.updateUpgradeUnlocks(state)
 
     // Update idle progress
     const idleEarnings = this.updateIdleProgress(deltaTime)
@@ -238,29 +248,14 @@ export class GameEngine implements IGameEngine {
    */
   public purchaseUpgrade(upgradeId: string): boolean {
     const state = this.getGameState()
-    const upgrade = state.upgrades.find(u => u.id === upgradeId)
+    const success = this.upgradeManager.purchaseUpgrade(upgradeId, state)
     
-    if (!upgrade || !this.canAffordUpgrade(upgrade)) {
-      return false
+    if (success) {
+      // Update the store with the modified state
+      this.getStore().setGameState(state)
     }
     
-    const cost = this.getUpgradeCost(upgrade)
-    
-    // Deduct cost
-    this.getStore().updateCurrency(cost.negated())
-    
-    // Apply upgrade effect
-    upgrade.effect.apply(state)
-    
-    // Update upgrade state
-    upgrade.currentPurchases++
-    
-    // Mark as purchased if it's a one-time upgrade
-    if (upgrade.maxPurchases === 1) {
-      state.purchasedUpgrades.add(upgradeId)
-    }
-    
-    return true
+    return success
   }
 
   /**
@@ -268,26 +263,30 @@ export class GameEngine implements IGameEngine {
    */
   public canAffordUpgrade(upgrade: Upgrade): boolean {
     const state = this.getGameState()
-    
-    if (!upgrade.unlocked || upgrade.currentPurchases >= upgrade.maxPurchases) {
-      return false
-    }
-    
-    const cost = this.getUpgradeCost(upgrade)
-    return greaterThanOrEqual(state.currency, cost)
+    return this.upgradeManager.canAffordUpgrade(upgrade, state)
   }
 
   /**
    * Get the cost of an upgrade
    */
   public getUpgradeCost(upgrade: Upgrade): Decimal {
-    if (upgrade.currentPurchases === 0) {
-      return upgrade.baseCost
-    }
-    
-    // Exponential cost scaling
-    const multiplier = upgrade.costMultiplier.pow(upgrade.currentPurchases)
-    return multiply(upgrade.baseCost, multiplier)
+    return this.upgradeManager.getUpgradeCost(upgrade)
+  }
+
+  /**
+   * Get all available upgrades
+   */
+  public getAvailableUpgrades(): Upgrade[] {
+    const state = this.getGameState()
+    return this.upgradeManager.getAvailableUpgrades(state)
+  }
+
+  /**
+   * Get all visible upgrades
+   */
+  public getVisibleUpgrades(): Upgrade[] {
+    const state = this.getGameState()
+    return this.upgradeManager.getVisibleUpgrades(state)
   }
 
   /**
@@ -671,7 +670,11 @@ export const gameEngine = new GameEngine()
  */
 if (typeof window !== 'undefined') {
   (window as any).clearGameData = () => {
+    console.log('Clearing game data and reloading...')
     localStorage.removeItem('idle-clicker-game-storage')
     window.location.reload()
   }
+  
+  console.log('Debug commands available:')
+  console.log('- clearGameData() - Clear all save data and reload')
 }

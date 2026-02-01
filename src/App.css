@@ -10,8 +10,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 2rem;
+  padding: 2rem 0;
 }
 
 .app-header {
@@ -42,9 +43,11 @@
 
 .app-main {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2rem;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 3rem;
+  max-width: 1200px;
+  width: 100%;
 }
 
 .click-section {
@@ -52,6 +55,12 @@
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  flex-shrink: 0;
+}
+
+.upgrade-section {
+  flex: 1;
+  min-width: 400px;
 }
 
 .click-button-container {
@@ -84,6 +93,132 @@
   cursor: not-allowed;
 }
 
+/* Upgrade List Styles */
+.upgrade-list {
+  text-align: left;
+}
+
+.upgrade-list h2 {
+  color: #646cff;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.upgrade-list.empty {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+}
+
+.upgrade-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.upgrade-item {
+  background: #1a1a1a;
+  border: 2px solid #333;
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.upgrade-item.affordable {
+  border-color: #4CAF50;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+.upgrade-item.unaffordable {
+  border-color: #666;
+  opacity: 0.7;
+}
+
+.upgrade-item.maxed {
+  border-color: #FFD700;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a1a 100%);
+}
+
+.upgrade-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.upgrade-name {
+  margin: 0;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.upgrade-level {
+  background: #333;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #ccc;
+}
+
+.upgrade-description {
+  margin: 0 0 1rem 0;
+  color: #ccc;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.upgrade-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.upgrade-effect {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.upgrade-cost {
+  color: #FFB74D;
+}
+
+.upgrade-button {
+  width: 100%;
+  padding: 0.7rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upgrade-button.can-afford {
+  background: #4CAF50;
+  color: white;
+}
+
+.upgrade-button.can-afford:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+}
+
+.upgrade-button.cannot-afford {
+  background: #666;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.upgrade-maxed {
+  text-align: center;
+  padding: 0.7rem;
+  background: #FFD700;
+  color: #000;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .click-button {
     transition: none;
@@ -91,5 +226,26 @@
   
   .click-button:hover:not(:disabled) {
     transform: none;
+  }
+  
+  .upgrade-item {
+    transition: none;
+  }
+  
+  .upgrade-button {
+    transition: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-main {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .upgrade-section {
+    min-width: auto;
+    width: 100%;
+    max-width: 500px;
   }
 }

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { GameEngine } from './gameEngine'
 import { useGameStore } from '../stores/gameStore'
 import { decimal, ZERO, ONE } from '../utils/decimal'
-import { IdleGenerator, Upgrade, AutomationSystem } from '../types/gameTypes'
+import type { IdleGenerator, Upgrade, AutomationSystem } from '../types/gameTypes'
 
 // Mock the game store
 vi.mock('../stores/gameStore', () => ({
@@ -72,7 +72,7 @@ describe('GameEngine', () => {
     mockStore.getGameState.mockReturnValue(mockStore.gameState)
 
     // Mock the useGameStore to return our mock
-    vi.mocked(useGameStore).getState.mockReturnValue(mockStore)
+    ;(useGameStore.getState as any).mockReturnValue(mockStore)
 
     // Create engine instance (but stop the game loop for testing)
     engine = new GameEngine()
