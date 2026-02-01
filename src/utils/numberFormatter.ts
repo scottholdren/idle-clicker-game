@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js'
-import { decimal, greaterThanOrEqual, lessThan, isZero } from './decimal'
+import { decimal, greaterThanOrEqual, isZero } from './decimal'
 
 /**
  * Number formatting configuration

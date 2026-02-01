@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import Decimal from 'decimal.js'
-import { GameState, GameSettings, SerializableGameState, SaveData } from '../types/gameTypes'
+import type { GameState, GameSettings, SerializableGameState, SaveData } from '../types/gameTypes'
 import { decimal, ZERO, ONE } from '../utils/decimal'
 
 /**

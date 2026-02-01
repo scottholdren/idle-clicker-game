@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js'
-import { 
+import type { 
   GameEngine as IGameEngine, 
   GameState, 
   OfflineProgress,
@@ -11,18 +11,24 @@ import {
   GameSettings
 } from '../types/gameTypes'
 import { useGameStore } from '../stores/gameStore'
-import { decimal, add, multiply, greaterThanOrEqual, lessThan, ZERO, ONE } from '../utils/decimal'
+import { decimal, add, multiply, greaterThanOrEqual, ZERO, ONE } from '../utils/decimal'
 
 /**
  * Core Game Engine implementation
  */
 export class GameEngine implements IGameEngine {
-  private gameStore = useGameStore
   private updateInterval: number | null = null
   private lastUpdateTime: number = Date.now()
 
   constructor() {
     this.startGameLoop()
+  }
+
+  /**
+   * Get the current game store state
+   */
+  private getStore() {
+    return useGameStore.getState()
   }
 
   /**
@@ -65,7 +71,7 @@ export class GameEngine implements IGameEngine {
     this.handleAutoSave()
     
     // Update last active time
-    this.gameStore.getState().updateLastActiveTime()
+    this.getStore().updateLastActiveTime()
   }
 
   /**
@@ -76,8 +82,8 @@ export class GameEngine implements IGameEngine {
     const clickValue = multiply(state.baseClickValue, state.clickMultiplier)
     
     // Update currency and click count
-    this.gameStore.getState().updateCurrency(clickValue)
-    this.gameStore.getState().addClicks(1)
+    this.getStore().updateCurrency(clickValue)
+    this.getStore().addClicks(1)
     
     return clickValue
   }
@@ -99,7 +105,7 @@ export class GameEngine implements IGameEngine {
     const earnings = multiply(totalProduction, decimal(deltaTime))
     
     // Update currency
-    this.gameStore.getState().updateCurrency(earnings)
+    this.getStore().updateCurrency(earnings)
     
     return earnings
   }
@@ -241,7 +247,7 @@ export class GameEngine implements IGameEngine {
     const cost = this.getUpgradeCost(upgrade)
     
     // Deduct cost
-    this.gameStore.getState().updateCurrency(cost.negated())
+    this.getStore().updateCurrency(cost.negated())
     
     // Apply upgrade effect
     upgrade.effect.apply(state)
@@ -298,7 +304,7 @@ export class GameEngine implements IGameEngine {
     const cost = this.getGeneratorCost(generator, amount)
     
     // Deduct cost
-    this.gameStore.getState().updateCurrency(cost.negated())
+    this.getStore().updateCurrency(cost.negated())
     
     // Add generators
     generator.owned += amount
@@ -389,7 +395,7 @@ export class GameEngine implements IGameEngine {
       lastActiveTime: Date.now(),
     }
     
-    this.gameStore.getState().setGameState(newState)
+    this.getStore().setGameState(newState)
   }
 
   /**
@@ -463,7 +469,7 @@ export class GameEngine implements IGameEngine {
       lastActiveTime: Date.now(),
     }
     
-    this.gameStore.getState().setGameState(newState)
+    this.getStore().setGameState(newState)
   }
 
   /**
@@ -498,7 +504,7 @@ export class GameEngine implements IGameEngine {
     const cost = this.getAutomationCost(automation, amount)
     
     // Deduct cost
-    this.gameStore.getState().updateCurrency(cost.negated())
+    this.getStore().updateCurrency(cost.negated())
     
     // Add automation
     automation.owned += amount
@@ -585,7 +591,7 @@ export class GameEngine implements IGameEngine {
    * Save game
    */
   public saveGame(): void {
-    this.gameStore.getState().saveGame()
+    this.getStore().saveGame()
   }
 
   /**
@@ -593,7 +599,7 @@ export class GameEngine implements IGameEngine {
    */
   public loadGame(saveData: SaveData): boolean {
     try {
-      this.gameStore.getState().loadGame(saveData)
+      this.getStore().loadGame(saveData)
       return true
     } catch (error) {
       console.error('Failed to load game:', error)
@@ -605,35 +611,35 @@ export class GameEngine implements IGameEngine {
    * Export save
    */
   public exportSave(): string {
-    return this.gameStore.getState().exportSave()
+    return this.getStore().exportSave()
   }
 
   /**
    * Import save
    */
   public importSave(saveString: string): boolean {
-    return this.gameStore.getState().importSave(saveString)
+    return this.getStore().importSave(saveString)
   }
 
   /**
    * Get current game state
    */
   public getGameState(): GameState {
-    return this.gameStore.getState().getGameState()
+    return this.getStore().getGameState()
   }
 
   /**
    * Update settings
    */
   public updateSettings(settings: Partial<GameSettings>): void {
-    this.gameStore.getState().updateSettings(settings)
+    this.getStore().updateSettings(settings)
   }
 
   /**
    * Reset game
    */
   public resetGame(): void {
-    this.gameStore.getState().resetGame()
+    this.getStore().resetGame()
   }
 
   /**
