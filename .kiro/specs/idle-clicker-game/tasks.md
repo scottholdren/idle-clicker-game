@@ -93,7 +93,7 @@ This implementation plan breaks down the idle clicker game into discrete coding 
     - _Requirements: 3.4, 3.5, 11.2, 11.3_
 
 - [ ] 7. Idle Generation System
-  - [ ] 7.1 Implement Idle System core
+  - [x] 7.1 Implement Idle System core
     - Create IdleGenerator class and IdleSystem manager
     - Implement continuous currency generation calculations
     - Add offline progress calculation with time caps and efficiency rates
@@ -134,7 +134,7 @@ This implementation plan breaks down the idle clicker game into discrete coding 
     - **Property 15: Error Handling Preservation**
     - **Validates: Requirements 5.3, 6.5**
 
-- [ ] 9. Checkpoint - Core Game Loop Complete
+- [-] 9. Checkpoint - Core Game Loop Complete
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 10. Automation System

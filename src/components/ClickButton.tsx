@@ -136,13 +136,13 @@ export const ClickButton: React.FC<ClickButtonProps> = ({
           position: 'relative',
           overflow: 'visible',
         }}
-        aria-label={`Click to earn ${formatNumber(clickValue)} currency`}
+        aria-label={`Click to earn ${formatNumber(clickValue)} clicks`}
       >
-        <div style={{ fontSize: '24px' }}>💰</div>
-        <div>CLICK</div>
+        <div style={{ fontSize: '24px' }}>👁️</div>
+        <div>GENERATE</div>
         {showClickValue && (
           <div style={{ fontSize: '14px', opacity: 0.9 }}>
-            +{formatNumber(clickValue)}
+            +{formatNumber(clickValue)} clicks
           </div>
         )}
       </button>

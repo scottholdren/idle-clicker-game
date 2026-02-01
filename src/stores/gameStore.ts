@@ -4,6 +4,7 @@ import Decimal from 'decimal.js'
 import type { GameState, GameSettings, SerializableGameState, SaveData } from '../types/gameTypes'
 import { decimal, ZERO, ONE } from '../utils/decimal'
 import { INITIAL_UPGRADES } from '../data/upgrades'
+import { INITIAL_IDLE_GENERATORS } from '../data/idleGenerators'
 
 /**
  * Default game settings
@@ -25,8 +26,13 @@ function createInitialGameState(): GameState {
   const now = Date.now()
   
   return {
+    // Digital Decay 4-tier currency system
+    currency: ZERO, // Clicks - starts at 0
+    views: ZERO, // Views - starts at 0
+    engagement: ONE, // Engagement - starts at 1x multiplier
+    influence: ZERO, // Influence - starts at 0
+    
     // Basic game data
-    currency: ZERO,
     totalClicks: 0,
     totalEarned: ZERO,
     gameStartTime: now,
@@ -77,6 +83,10 @@ function createInitialGameState(): GameState {
 function serializeGameState(state: GameState): SerializableGameState {
   return {
     currency: state.currency.toString(),
+    views: state.views.toString(),
+    engagement: state.engagement.toString(),
+    influence: state.influence.toString(),
+    
     totalClicks: state.totalClicks,
     totalEarned: state.totalEarned.toString(),
     gameStartTime: state.gameStartTime,
@@ -160,6 +170,10 @@ function serializeGameState(state: GameState): SerializableGameState {
 function deserializeGameState(serialized: SerializableGameState): GameState {
   return {
     currency: decimal(serialized.currency),
+    views: decimal(serialized.views || '0'), // Default to 0 for backward compatibility
+    engagement: decimal(serialized.engagement || '1'), // Default to 1 for backward compatibility
+    influence: decimal(serialized.influence || '0'), // Default to 0 for backward compatibility
+    
     totalClicks: serialized.totalClicks,
     totalEarned: decimal(serialized.totalEarned),
     gameStartTime: serialized.gameStartTime,
@@ -169,12 +183,28 @@ function deserializeGameState(serialized: SerializableGameState): GameState {
     clickMultiplier: decimal(serialized.clickMultiplier),
     baseClickValue: decimal(serialized.baseClickValue),
     
-    idleGenerators: serialized.idleGenerators.map(gen => ({
-      ...gen,
-      baseProduction: decimal(gen.baseProduction),
-      baseCost: decimal(gen.baseCost),
-      costMultiplier: decimal(gen.costMultiplier),
-    })),
+    idleGenerators: serialized.idleGenerators.map(gen => {
+      // Find the original generator definition to restore functions
+      const originalGenerator = INITIAL_IDLE_GENERATORS.find(orig => orig.id === gen.id)
+      if (!originalGenerator) {
+        console.warn(`Original generator definition not found for ${gen.id}`)
+        return {
+          ...gen,
+          baseProduction: decimal(gen.baseProduction),
+          baseCost: decimal(gen.baseCost),
+          costMultiplier: decimal(gen.costMultiplier),
+          unlockCondition: () => true, // Fallback always unlocked
+        }
+      }
+      
+      return {
+        ...gen,
+        baseProduction: decimal(gen.baseProduction),
+        baseCost: decimal(gen.baseCost),
+        costMultiplier: decimal(gen.costMultiplier),
+        unlockCondition: originalGenerator.unlockCondition, // Restore original function
+      }
+    }),
     idleMultiplier: decimal(serialized.idleMultiplier),
     offlineProgressRate: serialized.offlineProgressRate,
     maxOfflineHours: serialized.maxOfflineHours,
@@ -272,6 +302,9 @@ interface GameStore {
   // Actions
   updateCurrency: (amount: Decimal) => void
   setCurrency: (amount: Decimal) => void
+  updateViews: (amount: Decimal) => void
+  updateEngagement: (amount: Decimal) => void
+  updateInfluence: (amount: Decimal) => void
   addClicks: (count: number) => void
   updateLastActiveTime: () => void
   updateSettings: (settings: Partial<GameSettings>) => void
@@ -297,7 +330,7 @@ export const useGameStore = create<GameStore>()(
       // Initial state
       gameState: createInitialGameState(),
       
-      // Actions
+      // Currency actions
       updateCurrency: (amount: Decimal) => {
         set((state) => ({
           gameState: {
@@ -314,6 +347,36 @@ export const useGameStore = create<GameStore>()(
           gameState: {
             ...state.gameState,
             currency: amount,
+            lastActiveTime: Date.now(),
+          },
+        }))
+      },
+
+      updateViews: (amount: Decimal) => {
+        set((state) => ({
+          gameState: {
+            ...state.gameState,
+            views: decimal(state.gameState.views).plus(amount),
+            lastActiveTime: Date.now(),
+          },
+        }))
+      },
+
+      updateEngagement: (amount: Decimal) => {
+        set((state) => ({
+          gameState: {
+            ...state.gameState,
+            engagement: decimal(state.gameState.engagement).plus(amount),
+            lastActiveTime: Date.now(),
+          },
+        }))
+      },
+
+      updateInfluence: (amount: Decimal) => {
+        set((state) => ({
+          gameState: {
+            ...state.gameState,
+            influence: decimal(state.gameState.influence).plus(amount),
             lastActiveTime: Date.now(),
           },
         }))
@@ -356,7 +419,7 @@ export const useGameStore = create<GameStore>()(
       
       // Save/Load
       saveGame: () => {
-        const state = get().gameState
+        const gameState = get().gameState
         const now = Date.now()
         
         set((currentState) => ({
@@ -378,12 +441,12 @@ export const useGameStore = create<GameStore>()(
       },
       
       exportSave: () => {
-        const state = get().gameState
+        const gameState = get().gameState
         const saveData: SaveData = {
           version: '1.0.0',
           timestamp: Date.now(),
-          gameState: serializeGameState(state),
-          settings: state.settings,
+          gameState: serializeGameState(gameState),
+          settings: gameState.settings,
         }
         
         return JSON.stringify(saveData)
@@ -408,53 +471,42 @@ export const useGameStore = create<GameStore>()(
       
       // Utility
       getGameState: () => {
-        const state = get().gameState
+        const gameState = get().gameState
         // Ensure all Decimal fields are proper Decimal objects
         return {
-          ...state,
-          currency: decimal(state.currency),
-          totalEarned: decimal(state.totalEarned),
-          baseClickValue: decimal(state.baseClickValue),
-          clickMultiplier: decimal(state.clickMultiplier),
-          idleMultiplier: decimal(state.idleMultiplier),
-          prestigePoints: decimal(state.prestigePoints),
-          metaPrestigePoints: decimal(state.metaPrestigePoints),
+          ...gameState,
+          currency: decimal(gameState.currency),
+          views: decimal(gameState.views),
+          engagement: decimal(gameState.engagement),
+          influence: decimal(gameState.influence),
+          totalEarned: decimal(gameState.totalEarned),
+          baseClickValue: decimal(gameState.baseClickValue),
+          clickMultiplier: decimal(gameState.clickMultiplier),
+          idleMultiplier: decimal(gameState.idleMultiplier),
+          prestigePoints: decimal(gameState.prestigePoints),
+          metaPrestigePoints: decimal(gameState.metaPrestigePoints),
         }
       },
       
-      setGameState: (state: GameState) => {
-        set({ gameState: state })
+      setGameState: (gameState: GameState) => {
+        set({ gameState })
       },
     }),
     {
       name: 'idle-clicker-game-storage',
       storage: createJSONStorage(() => localStorage),
       
-      // Custom serialization to handle Decimal and Set types
-      serialize: (state) => {
-        const serializedState = {
-          ...state,
-          gameState: serializeGameState(state.gameState),
-        }
-        return JSON.stringify(serializedState)
-      },
-      
-      deserialize: (str) => {
-        const parsed = JSON.parse(str)
-        return {
-          ...parsed,
-          gameState: deserializeGameState(parsed.gameState),
-        }
-      },
-      
       // Merge function for handling state updates
-      merge: (persistedState, currentState) => {
+      merge: (persistedState: any, currentState: GameStore) => {
         // If persisted state exists, use it; otherwise use current state
         if (persistedState && persistedState.gameState) {
           // Ensure the persisted state has proper Decimal objects
           const safeGameState = {
             ...persistedState.gameState,
             currency: decimal(persistedState.gameState.currency || 0),
+            views: decimal(persistedState.gameState.views || 0),
+            engagement: decimal(persistedState.gameState.engagement || 1),
+            influence: decimal(persistedState.gameState.influence || 0),
             totalEarned: decimal(persistedState.gameState.totalEarned || 0),
             baseClickValue: decimal(persistedState.gameState.baseClickValue || 1),
             clickMultiplier: decimal(persistedState.gameState.clickMultiplier || 1),
@@ -479,6 +531,9 @@ export const useGameStore = create<GameStore>()(
  * Selector hooks for specific parts of the game state
  */
 export const useCurrency = () => useGameStore((state) => state.gameState.currency)
+export const useViews = () => useGameStore((state) => state.gameState.views)
+export const useEngagement = () => useGameStore((state) => state.gameState.engagement)
+export const useInfluence = () => useGameStore((state) => state.gameState.influence)
 export const useClicks = () => useGameStore((state) => state.gameState.totalClicks)
 export const useSettings = () => useGameStore((state) => state.gameState.settings)
 export const useUpgrades = () => useGameStore((state) => state.gameState.upgrades)

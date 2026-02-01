@@ -25,20 +25,51 @@
 .app-header h1 {
   font-size: 3rem;
   margin: 0;
-  color: #646cff;
+  color: #2563eb;
+  font-weight: 600;
+  letter-spacing: -0.025em;
 }
 
 .currency-display {
-  background: #1a1a1a;
-  padding: 1rem 2rem;
-  border-radius: 8px;
-  border: 2px solid #646cff;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  border: 2px solid #2563eb;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  min-width: 300px;
+}
+
+.currency-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.5rem 0;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.currency-row:last-child {
+  border-bottom: none;
+}
+
+.currency-label {
+  font-weight: 600;
+  color: #1e40af;
+  font-size: 1.1rem;
+}
+
+.currency-value {
+  font-weight: 700;
+  color: #2563eb;
+  font-size: 1.2rem;
+  font-family: 'Courier New', monospace;
 }
 
 .currency-display h2 {
   margin: 0;
-  color: #4CAF50;
+  color: #1e40af;
   font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .app-main {

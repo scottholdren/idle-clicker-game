@@ -4,8 +4,13 @@ import Decimal from 'decimal.js'
  * Core game state interface
  */
 export interface GameState {
+  // Digital Decay 4-tier currency system
+  currency: Decimal // Tier 1: Clicks - base currency from manual clicking
+  views: Decimal // Tier 2: Views - passive resource from generators
+  engagement: Decimal // Tier 3: Engagement - emotional response multiplier
+  influence: Decimal // Tier 4: Influence - meta-progression currency
+  
   // Basic game data
-  currency: Decimal
   totalClicks: number
   totalEarned: Decimal
   gameStartTime: number
@@ -208,7 +213,11 @@ export interface SaveData {
  */
 export interface SerializableGameState {
   // Convert Decimals to strings and Sets to arrays for JSON serialization
-  currency: string
+  currency: string // Clicks
+  views: string // Views
+  engagement: string // Engagement
+  influence: string // Influence
+  
   totalClicks: number
   totalEarned: string
   gameStartTime: number

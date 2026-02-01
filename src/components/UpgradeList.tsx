@@ -69,14 +69,14 @@ export const UpgradeList: React.FC = () => {
   if (upgrades.length === 0) {
     return (
       <div className="upgrade-list empty">
-        <p>No upgrades available yet. Keep clicking to unlock upgrades!</p>
+        <p>No upgrades available yet. Keep generating clicks to unlock improvements!</p>
       </div>
     )
   }
   
   return (
     <div className="upgrade-list">
-      <h2>Upgrades</h2>
+      <h2>Improvements</h2>
       <div className="upgrade-grid">
         {upgrades.map(upgrade => {
           const cost = gameEngine.getUpgradeCost(upgrade)

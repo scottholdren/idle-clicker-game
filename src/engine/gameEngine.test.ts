@@ -19,7 +19,10 @@ describe('GameEngine', () => {
     // Create a fresh mock store for each test
     mockStore = {
       gameState: {
-        currency: ZERO,
+        currency: ZERO, // Clicks
+        views: ZERO, // Views
+        engagement: ONE, // Engagement multiplier
+        influence: ZERO, // Influence
         totalClicks: 0,
         totalEarned: ZERO,
         gameStartTime: Date.now(),
@@ -149,7 +152,12 @@ describe('GameEngine', () => {
       const earnings = engine.updateIdleProgress(1) // 1 second
       
       expect(earnings.equals(decimal(10))).toBe(true)
-      expect(mockStore.updateCurrency).toHaveBeenCalledWith(decimal(10))
+      expect(mockStore.setGameState).toHaveBeenCalled()
+      
+      // Check that the new state includes the views and converted clicks
+      const setGameStateCall = mockStore.setGameState.mock.calls[0][0]
+      expect(setGameStateCall.views.equals(decimal(10))).toBe(true) // Views earned
+      expect(setGameStateCall.currency.equals(decimal(1))).toBe(true) // 10 views / 10 = 1 click
     })
   })
 
