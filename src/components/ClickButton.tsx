@@ -38,7 +38,9 @@ export const ClickButton: React.FC<ClickButtonProps> = ({
   // Update click value when game state changes
   useEffect(() => {
     const state = gameEngine.getGameState()
-    const currentClickValue = state.baseClickValue.times(state.clickMultiplier)
+    const baseValue = decimal(state.baseClickValue)
+    const multiplier = decimal(state.clickMultiplier)
+    const currentClickValue = baseValue.times(multiplier)
     setClickValue(currentClickValue)
   }, [currency]) // Re-calculate when currency changes (indicating game state update)
 

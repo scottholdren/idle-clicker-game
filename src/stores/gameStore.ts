@@ -281,8 +281,8 @@ export const useGameStore = create<GameStore>()(
         set((state) => ({
           gameState: {
             ...state.gameState,
-            currency: state.gameState.currency.plus(amount),
-            totalEarned: state.gameState.totalEarned.plus(amount.isPositive() ? amount : ZERO),
+            currency: decimal(state.gameState.currency).plus(amount),
+            totalEarned: decimal(state.gameState.totalEarned).plus(amount.isPositive() ? amount : ZERO),
             lastActiveTime: Date.now(),
           },
         }))
@@ -386,7 +386,20 @@ export const useGameStore = create<GameStore>()(
       },
       
       // Utility
-      getGameState: () => get().gameState,
+      getGameState: () => {
+        const state = get().gameState
+        // Ensure all Decimal fields are proper Decimal objects
+        return {
+          ...state,
+          currency: decimal(state.currency),
+          totalEarned: decimal(state.totalEarned),
+          baseClickValue: decimal(state.baseClickValue),
+          clickMultiplier: decimal(state.clickMultiplier),
+          idleMultiplier: decimal(state.idleMultiplier),
+          prestigePoints: decimal(state.prestigePoints),
+          metaPrestigePoints: decimal(state.metaPrestigePoints),
+        }
+      },
       
       setGameState: (state: GameState) => {
         set({ gameState: state })
@@ -417,9 +430,22 @@ export const useGameStore = create<GameStore>()(
       merge: (persistedState, currentState) => {
         // If persisted state exists, use it; otherwise use current state
         if (persistedState && persistedState.gameState) {
+          // Ensure the persisted state has proper Decimal objects
+          const safeGameState = {
+            ...persistedState.gameState,
+            currency: decimal(persistedState.gameState.currency || 0),
+            totalEarned: decimal(persistedState.gameState.totalEarned || 0),
+            baseClickValue: decimal(persistedState.gameState.baseClickValue || 1),
+            clickMultiplier: decimal(persistedState.gameState.clickMultiplier || 1),
+            idleMultiplier: decimal(persistedState.gameState.idleMultiplier || 1),
+            prestigePoints: decimal(persistedState.gameState.prestigePoints || 0),
+            metaPrestigePoints: decimal(persistedState.gameState.metaPrestigePoints || 0),
+          }
+          
           return {
             ...currentState,
             ...persistedState,
+            gameState: safeGameState,
           }
         }
         return currentState

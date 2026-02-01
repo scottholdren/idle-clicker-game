@@ -665,3 +665,13 @@ export class GameEngine implements IGameEngine {
  * Global game engine instance
  */
 export const gameEngine = new GameEngine()
+
+/**
+ * Debug utility to clear localStorage (call from browser console)
+ */
+if (typeof window !== 'undefined') {
+  (window as any).clearGameData = () => {
+    localStorage.removeItem('idle-clicker-game-storage')
+    window.location.reload()
+  }
+}
