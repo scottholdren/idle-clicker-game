@@ -1,5 +1,6 @@
 import { ClickButton } from './components/ClickButton'
 import { UpgradeList } from './components/UpgradeList'
+import { GeneratorList } from './components/GeneratorList'
 import { useCurrency, useViews, useEngagement, useInfluence } from './stores/gameStore'
 import { formatNumber } from './utils/numberFormatter'
 import './App.css'
@@ -41,6 +42,7 @@ function App() {
         
         <div className="upgrade-section">
           <UpgradeList />
+          <GeneratorList />
         </div>
       </main>
     </div>
