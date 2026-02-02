@@ -327,6 +327,7 @@ function deserializeGameState(serialized: SerializableGameState): GameState {
     })),
     unlockedAchievements: new Set(serialized.unlockedAchievements),
     
+    // Ensure temporaryEffects is always an array, even if not in save data
     temporaryEffects: (serialized.temporaryEffects || []).map(effect => ({
       ...effect,
       value: decimal(effect.value),
@@ -579,6 +580,7 @@ export const useGameStore = create<GameStore>()(
             prestigePoints: decimal(persistedState.gameState.prestigePoints || 0),
             metaPrestigePoints: decimal(persistedState.gameState.metaPrestigePoints || 0),
             recentClicks: persistedState.gameState.recentClicks || [], // Ensure recentClicks exists
+            temporaryEffects: persistedState.gameState.temporaryEffects || [], // Ensure temporaryEffects exists
           }
           
           return {

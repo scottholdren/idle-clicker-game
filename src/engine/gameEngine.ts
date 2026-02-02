@@ -204,6 +204,13 @@ export class GameEngine implements IGameEngine {
    */
   private updateTemporaryEffects(): void {
     const state = this.getGameState()
+    
+    // Safety check: ensure temporaryEffects array exists
+    if (!state.temporaryEffects || !Array.isArray(state.temporaryEffects)) {
+      state.temporaryEffects = []
+      return
+    }
+    
     const now = Date.now()
     const expiredEffects: number[] = []
     

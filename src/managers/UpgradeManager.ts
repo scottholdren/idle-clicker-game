@@ -27,6 +27,9 @@ export class UpgradeManager {
       }))
     } else {
       // Upgrades exist (loaded from save) - restore functions from original definitions
+      // Also filter out upgrades that no longer exist in the current definitions
+      const validUpgrades: typeof gameState.upgrades = []
+      
       for (const upgrade of gameState.upgrades) {
         const originalUpgrade = INITIAL_UPGRADES.find(orig => orig.id === upgrade.id)
         if (originalUpgrade) {
@@ -34,11 +37,31 @@ export class UpgradeManager {
           upgrade.effect.apply = originalUpgrade.effect.apply
           // Restore the unlock condition function
           upgrade.unlockCondition = originalUpgrade.unlockCondition
+          validUpgrades.push(upgrade)
         } else {
-          console.warn(`Original upgrade definition not found for ${upgrade.id}`)
-          // Provide fallback functions
-          upgrade.effect.apply = () => {}
-          upgrade.unlockCondition = () => true
+          console.warn(`Upgrade ${upgrade.id} no longer exists in current definitions, removing from save data`)
+          // Remove from purchased upgrades set if it exists there
+          gameState.purchasedUpgrades.delete(upgrade.id)
+        }
+      }
+      
+      // Update the upgrades array with only valid upgrades
+      gameState.upgrades = validUpgrades
+      
+      // Add any new upgrades that weren't in the save data
+      for (const initialUpgrade of INITIAL_UPGRADES) {
+        const existingUpgrade = gameState.upgrades.find(u => u.id === initialUpgrade.id)
+        if (!existingUpgrade) {
+          console.log(`Adding new upgrade ${initialUpgrade.id} to existing save data`)
+          gameState.upgrades.push({
+            ...initialUpgrade,
+            baseCost: decimal(initialUpgrade.baseCost),
+            costMultiplier: decimal(initialUpgrade.costMultiplier),
+            effect: {
+              ...initialUpgrade.effect,
+              value: decimal(initialUpgrade.effect.value),
+            }
+          })
         }
       }
     }
