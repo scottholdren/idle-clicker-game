@@ -37,15 +37,6 @@ export function GeneratorList() {
     }
   }
 
-  if (visibleGenerators.length === 0) {
-    return (
-      <div className="generator-list empty">
-        <h2>Traffic Sources</h2>
-        <p>No traffic sources available yet. Keep clicking to unlock them!</p>
-      </div>
-    )
-  }
-
   return (
     <div className="generator-list">
       {/* TODO: Section title will change dynamically through game progression */}
@@ -53,62 +44,68 @@ export function GeneratorList() {
         Traffic Sources
         <span className="section-summary"> ({formatNumber(viewsPerSecond)} views/sec → {formatNumber(clicksPerSecondFromViews)} clicks/sec)</span>
       </h2>
-      <div className="generator-grid">
-        {visibleGenerators.map((generator) => {
-          const cost = gameEngine.getGeneratorCost(generator, 1)
-          const canAfford = gameEngine.canAffordGenerator(generator, 1)
-          const maxAffordable = gameEngine.getMaxAffordableGenerators(generator)
-          const productionPerSecond = decimal(generator.baseProduction).times(generator.owned || 0)
+      {visibleGenerators.length === 0 ? (
+        <div className="empty-state">
+          <p>No traffic sources available yet. Keep clicking to unlock them!</p>
+        </div>
+      ) : (
+        <div className="generator-grid">
+          {visibleGenerators.map((generator) => {
+            const cost = gameEngine.getGeneratorCost(generator, 1)
+            const canAfford = gameEngine.canAffordGenerator(generator, 1)
+            const maxAffordable = gameEngine.getMaxAffordableGenerators(generator)
+            const productionPerSecond = decimal(generator.baseProduction).times(generator.owned || 0)
 
-          return (
-            <div
-              key={generator.id}
-              className="generator-item"
-            >
-              <div className="generator-header">
-                <div className="generator-title-row">
-                  <h3 className="generator-name">{generator.name}</h3>
-                  <div className="generator-buttons">
-                    <button
-                      className={`generator-button-small ${canAfford ? 'can-afford' : 'cannot-afford'}`}
-                      onClick={() => handlePurchase(generator.id)}
-                      disabled={!canAfford}
-                    >
-                      Buy for {formatNumber(cost)} clicks
-                    </button>
-                    {maxAffordable > 1 && (
+            return (
+              <div
+                key={generator.id}
+                className="generator-item"
+              >
+                <div className="generator-header">
+                  <div className="generator-title-row">
+                    <h3 className="generator-name">{generator.name}</h3>
+                    <div className="generator-buttons">
                       <button
-                        className={`generator-button-small max-buy ${maxAffordable > 0 ? 'can-afford' : 'cannot-afford'}`}
-                        onClick={() => handleMaxPurchase(generator.id)}
-                        disabled={maxAffordable === 0}
+                        className={`generator-button-small ${canAfford ? 'can-afford' : 'cannot-afford'}`}
+                        onClick={() => handlePurchase(generator.id)}
+                        disabled={!canAfford}
                       >
-                        Max ({maxAffordable})
+                        Buy for {formatNumber(cost)} clicks
                       </button>
-                    )}
+                      {maxAffordable > 1 && (
+                        <button
+                          className={`generator-button-small max-buy ${maxAffordable > 0 ? 'can-afford' : 'cannot-afford'}`}
+                          onClick={() => handleMaxPurchase(generator.id)}
+                          disabled={maxAffordable === 0}
+                        >
+                          Max ({maxAffordable})
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="generator-owned">
+                    Owned: {generator.owned}
                   </div>
                 </div>
-                <div className="generator-owned">
-                  Owned: {generator.owned}
-                </div>
-              </div>
-              
-              <div className="generator-details-row">
-                <p className="generator-description">{generator.description}</p>
-                <div className="generator-stats">
-                  <div className="generator-production">
-                    Production: {formatNumber(generator.baseProduction)}/sec
-                    {generator.owned > 0 && (
-                      <span className="total-production">
-                        {' '}(Total: {formatNumber(productionPerSecond)}/sec)
-                      </span>
-                    )}
+                
+                <div className="generator-details-row">
+                  <p className="generator-description">{generator.description}</p>
+                  <div className="generator-stats">
+                    <div className="generator-production">
+                      Production: {formatNumber(generator.baseProduction)}/sec
+                      {generator.owned > 0 && (
+                        <span className="total-production">
+                          {' '}(Total: {formatNumber(productionPerSecond)}/sec)
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

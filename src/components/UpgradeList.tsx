@@ -106,14 +106,6 @@ export const UpgradeList: React.FC = () => {
     }
   }
   
-  if (!upgrades || upgrades.length === 0) {
-    return (
-      <div className="upgrade-list empty">
-        <p>No upgrades available yet. Keep generating clicks to unlock improvements!</p>
-      </div>
-    )
-  }
-  
   return (
     <div className="upgrade-list">
       <h2>
@@ -122,26 +114,32 @@ export const UpgradeList: React.FC = () => {
           <span className="section-summary"> ({formatNumber(totalClickMultiplier)} clicks per click)</span>
         </EngagementMultiplierTooltip>
       </h2>
-      <div className="upgrade-grid">
-        {upgrades.map(upgrade => {
-          try {
-            const cost = gameEngine.getUpgradeCost(upgrade)
-            const canAfford = decimal(currency).greaterThanOrEqualTo(cost)
-            
-            return (
-              <UpgradeItem
-                key={upgrade.id}
-                upgrade={upgrade}
-                canAfford={canAfford}
-                onPurchase={handlePurchase}
-              />
-            )
-          } catch (error) {
-            console.error(`Error rendering upgrade ${upgrade.id}:`, error)
-            return null
-          }
-        })}
-      </div>
+      {(!upgrades || upgrades.length === 0) ? (
+        <div className="empty-state">
+          <p>No upgrades available yet. Keep generating clicks to unlock improvements!</p>
+        </div>
+      ) : (
+        <div className="upgrade-grid">
+          {upgrades.map(upgrade => {
+            try {
+              const cost = gameEngine.getUpgradeCost(upgrade)
+              const canAfford = decimal(currency).greaterThanOrEqualTo(cost)
+              
+              return (
+                <UpgradeItem
+                  key={upgrade.id}
+                  upgrade={upgrade}
+                  canAfford={canAfford}
+                  onPurchase={handlePurchase}
+                />
+              )
+            } catch (error) {
+              console.error(`Error rendering upgrade ${upgrade.id}:`, error)
+              return null
+            }
+          })}
+        </div>
+      )}
     </div>
   )
 }
