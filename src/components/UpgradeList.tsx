@@ -3,7 +3,8 @@ import type { Upgrade } from '../types/gameTypes'
 import { useVisibleUpgrades, useCurrency } from '../stores/gameStore'
 import { gameEngine } from '../engine/gameEngine'
 import { formatNumber } from '../utils/numberFormatter'
-import { decimal } from '../utils/decimal'
+import { decimal, calculateStrategyPointsMultiplier } from '../utils/decimal'
+import EngagementMultiplierTooltip from './EngagementMultiplierTooltip'
 
 interface UpgradeItemProps {
   upgrade: Upgrade
@@ -14,46 +15,75 @@ interface UpgradeItemProps {
 const UpgradeItem: React.FC<UpgradeItemProps> = ({ upgrade, canAfford, onPurchase }) => {
   const cost = gameEngine.getUpgradeCost(upgrade)
   const isMaxed = upgrade.currentPurchases >= upgrade.maxPurchases
+  const maxAffordable = gameEngine.getMaxAffordableUpgrades(upgrade)
+  
+  // Calculate cumulative effect
+  const cumulativeEffect = gameEngine.calculateUpgradeCumulativeEffect(upgrade)
+  
+  const handleMaxPurchase = () => {
+    try {
+      const purchased = gameEngine.purchaseMaxUpgrades(upgrade.id)
+      console.log(`Purchased ${purchased} ${upgrade.name} upgrades`)
+    } catch (error) {
+      console.error('Error purchasing max upgrades:', error)
+    }
+  }
   
   return (
-    <div className={`upgrade-item ${canAfford && !isMaxed ? 'affordable' : 'unaffordable'} ${isMaxed ? 'maxed' : ''}`}>
+    <div className={`upgrade-item ${isMaxed ? 'maxed' : ''}`}>
       <div className="upgrade-header">
-        <h3 className="upgrade-name">{upgrade.name}</h3>
+        <div className="upgrade-title-row">
+          <h3 className="upgrade-name">{upgrade.name}</h3>
+          {!isMaxed && (
+            <div className="upgrade-buttons">
+              <button 
+                className={`upgrade-button-small ${canAfford ? 'can-afford' : 'cannot-afford'}`}
+                onClick={() => onPurchase(upgrade.id)}
+                disabled={!canAfford}
+              >
+                Buy for {formatNumber(cost)} clicks
+              </button>
+              {maxAffordable > 1 && (
+                <button 
+                  className={`upgrade-button-small max-buy ${maxAffordable > 0 ? 'can-afford' : 'cannot-afford'}`}
+                  onClick={handleMaxPurchase}
+                  disabled={maxAffordable === 0}
+                >
+                  Max ({maxAffordable})
+                </button>
+              )}
+            </div>
+          )}
+          {isMaxed && (
+            <div className="upgrade-maxed-small">MAX</div>
+          )}
+        </div>
         <div className="upgrade-level">
           {upgrade.currentPurchases}/{upgrade.maxPurchases}
         </div>
       </div>
       
-      <p className="upgrade-description">{upgrade.description}</p>
-      
-      <div className="upgrade-details">
-        <div className="upgrade-effect">
-          Effect: {upgrade.effect.type === 'clickMultiplier' ? 'Click x' : 
-                   upgrade.effect.type === 'idleMultiplier' ? 'Idle x' : 
-                   upgrade.effect.type === 'special' ? '+' : ''}
-          {formatNumber(upgrade.effect.value)}
+      <div className="upgrade-details-row">
+        <p className="upgrade-description">{upgrade.description}</p>
+        <div className="upgrade-stats">
+          {upgrade.currentPurchases > 0 ? (
+            <div className="upgrade-effect">
+              {cumulativeEffect.type}: {
+                cumulativeEffect.type.includes('Multiplier') ? 
+                  `${formatNumber(cumulativeEffect.value)}x` :
+                  `+${formatNumber(cumulativeEffect.value)}`
+              }
+            </div>
+          ) : (
+            <div className="upgrade-effect">
+              Next: {upgrade.effect.type === 'clickMultiplier' ? 'Click x' : 
+                     upgrade.effect.type === 'idleMultiplier' ? 'Idle x' : 
+                     upgrade.effect.type === 'special' ? '+' : ''}
+              {formatNumber(upgrade.effect.value)}
+            </div>
+          )}
         </div>
-        
-        {!isMaxed && (
-          <div className="upgrade-cost">
-            Cost: {formatNumber(cost)}
-          </div>
-        )}
       </div>
-      
-      {!isMaxed && (
-        <button 
-          className={`upgrade-button ${canAfford ? 'can-afford' : 'cannot-afford'}`}
-          onClick={() => onPurchase(upgrade.id)}
-          disabled={!canAfford}
-        >
-          {canAfford ? 'Purchase' : 'Cannot Afford'}
-        </button>
-      )}
-      
-      {isMaxed && (
-        <div className="upgrade-maxed">MAXED</div>
-      )}
     </div>
   )
 }
@@ -61,6 +91,12 @@ const UpgradeItem: React.FC<UpgradeItemProps> = ({ upgrade, canAfford, onPurchas
 export const UpgradeList: React.FC = () => {
   const upgrades = useVisibleUpgrades()
   const currency = useCurrency()
+  
+  // Calculate total click multiplier (base × multiplier × strategy bonus)
+  const gameState = gameEngine.getGameState()
+  const baseClickMultiplier = gameState.baseClickValue.times(gameState.clickMultiplier)
+  const strategyBonus = calculateStrategyPointsMultiplier(gameState.prestigePoints)
+  const totalClickMultiplier = baseClickMultiplier.times(strategyBonus)
   
   const handlePurchase = (upgradeId: string) => {
     try {
@@ -80,7 +116,12 @@ export const UpgradeList: React.FC = () => {
   
   return (
     <div className="upgrade-list">
-      <h2>Improvements</h2>
+      <h2>
+        Engagement Signals
+        <EngagementMultiplierTooltip>
+          <span className="section-summary"> ({formatNumber(totalClickMultiplier)} clicks per click)</span>
+        </EngagementMultiplierTooltip>
+      </h2>
       <div className="upgrade-grid">
         {upgrades.map(upgrade => {
           try {

@@ -17,6 +17,9 @@ export interface GameState {
   lastSaveTime: number
   lastActiveTime: number
   
+  // Manual click rate tracking
+  recentClicks: number[] // Timestamps of recent manual clicks
+  
   // Click system
   clickMultiplier: Decimal
   baseClickValue: Decimal
@@ -49,6 +52,9 @@ export interface GameState {
   // Achievements
   achievements: Achievement[]
   unlockedAchievements: Set<string>
+  
+  // Temporary effects
+  temporaryEffects: TemporaryEffect[]
   
   // Settings
   settings: GameSettings
@@ -83,6 +89,20 @@ export interface Upgrade {
   unlocked: boolean
   unlockCondition?: (gameState: GameState) => boolean
   effect: UpgradeEffect
+}
+
+/**
+ * Temporary effect interface
+ */
+export interface TemporaryEffect {
+  id: string
+  name: string
+  type: 'clickMultiplier' | 'idleMultiplier' | 'special'
+  value: Decimal
+  startTime: number
+  duration: number // in milliseconds
+  apply: (gameState: GameState) => void
+  remove: (gameState: GameState) => void
 }
 
 /**
@@ -224,6 +244,8 @@ export interface SerializableGameState {
   lastSaveTime: number
   lastActiveTime: number
   
+  recentClicks: number[]
+  
   clickMultiplier: string
   baseClickValue: string
   
@@ -249,6 +271,8 @@ export interface SerializableGameState {
   
   achievements: SerializableAchievement[]
   unlockedAchievements: string[]
+  
+  temporaryEffects: SerializableTemporaryEffect[]
   
   settings: GameSettings
 }
@@ -304,6 +328,10 @@ export interface SerializableAchievement extends Omit<Achievement, 'unlockCondit
 }
 
 export interface SerializableAchievementReward extends Omit<AchievementReward, 'value' | 'apply'> {
+  value: string
+}
+
+export interface SerializableTemporaryEffect extends Omit<TemporaryEffect, 'value' | 'apply' | 'remove'> {
   value: string
 }
 

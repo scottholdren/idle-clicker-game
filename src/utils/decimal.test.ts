@@ -23,6 +23,7 @@ import {
   ceil,
   isValidDecimal,
   toDecimalSafe,
+  calculateStrategyPointsMultiplier,
   ZERO,
   ONE,
   TEN,
@@ -198,6 +199,25 @@ describe('Decimal Utilities', () => {
       
       // 2^100 is a very large number
       expect(result.greaterThan(THOUSAND)).toBe(true)
+    })
+  })
+
+  describe('calculateStrategyPointsMultiplier', () => {
+    it('should calculate strategy points multiplier correctly', () => {
+      // Test with 0 strategy points
+      expect(calculateStrategyPointsMultiplier(0).equals(decimal(1))).toBe(true)
+      
+      // Test with 1 strategy point (10% bonus)
+      expect(calculateStrategyPointsMultiplier(1).equals(decimal(1.1))).toBe(true)
+      
+      // Test with 3 strategy points (30% bonus)
+      expect(calculateStrategyPointsMultiplier(3).equals(decimal(1.3))).toBe(true)
+      
+      // Test with 10 strategy points (100% bonus = 2x multiplier)
+      expect(calculateStrategyPointsMultiplier(10).equals(decimal(2))).toBe(true)
+      
+      // Test with decimal input
+      expect(calculateStrategyPointsMultiplier(decimal(5)).equals(decimal(1.5))).toBe(true)
     })
   })
 })

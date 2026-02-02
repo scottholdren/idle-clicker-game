@@ -9,6 +9,7 @@ vi.mock('../stores/gameStore', () => ({
   useGameStore: {
     getState: vi.fn(),
   },
+  getGameMode: vi.fn(() => 'testing'), // Add getGameMode mock
 }))
 
 describe('GameEngine', () => {
@@ -28,6 +29,7 @@ describe('GameEngine', () => {
         gameStartTime: Date.now(),
         lastSaveTime: Date.now(),
         lastActiveTime: Date.now(),
+        recentClicks: [],
         baseClickValue: ONE,
         clickMultiplier: ONE,
         idleGenerators: [],
@@ -47,6 +49,7 @@ describe('GameEngine', () => {
         automationSystems: [],
         achievements: [],
         unlockedAchievements: new Set(),
+        temporaryEffects: [],
         settings: {
           numberFormat: 'suffix',
           autoSave: true,
@@ -60,6 +63,7 @@ describe('GameEngine', () => {
       updateCurrency: vi.fn(),
       setCurrency: vi.fn(),
       addClicks: vi.fn(),
+      addManualClick: vi.fn(),
       updateLastActiveTime: vi.fn(),
       updateSettings: vi.fn(),
       resetGame: vi.fn(),
@@ -88,7 +92,7 @@ describe('GameEngine', () => {
       
       expect(clickValue.equals(ONE)).toBe(true)
       expect(mockStore.updateCurrency).toHaveBeenCalledWith(ONE)
-      expect(mockStore.addClicks).toHaveBeenCalledWith(1)
+      expect(mockStore.addManualClick).toHaveBeenCalled()
     })
 
     it('should apply click multipliers', () => {
@@ -279,7 +283,7 @@ describe('GameEngine', () => {
       }
       
       const cost = engine.getGeneratorCost(generator, 1)
-      const expectedCost = decimal(100).times(decimal(1.15).pow(2))
+      const expectedCost = decimal(100).times(decimal(1.15).pow(2)).ceil()
       expect(cost.equals(expectedCost)).toBe(true)
     })
 
@@ -296,10 +300,11 @@ describe('GameEngine', () => {
       }
       
       const cost = engine.getGeneratorCost(generator, 3)
-      // Cost for 0th, 1st, and 2nd generators
+      // Cost for 0th, 1st, and 2nd generators, then ceiling
       const expectedCost = decimal(100)
         .plus(decimal(100).times(decimal(1.15)))
         .plus(decimal(100).times(decimal(1.15).pow(2)))
+        .ceil()
       
       expect(cost.toFixed(2)).toBe(expectedCost.toFixed(2))
     })
@@ -398,6 +403,17 @@ describe('GameEngine', () => {
       mockStore.importSave.mockReturnValue(true)
       const success = engine.importSave('save-string')
       expect(success).toBe(true)
+    })
+    it('should apply strategy points bonus to clicks', () => {
+      // Set up game state with strategy points
+      mockStore.gameState.prestigePoints = decimal(3) // 30% bonus
+      mockStore.gameState.baseClickValue = decimal(1)
+      mockStore.gameState.clickMultiplier = decimal(1)
+      
+      const clickValue = engine.performClick()
+      
+      // Should be base (1) * multiplier (1) * strategy bonus (1.3) = 1.3
+      expect(clickValue.equals(decimal(1.3))).toBe(true)
     })
   })
 })

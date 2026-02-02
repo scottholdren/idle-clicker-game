@@ -1,13 +1,15 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { gameEngine } from '../engine/gameEngine'
-import { useCurrency } from '../stores/gameStore'
+import { useCurrency, useTotalClicksPerSecond } from '../stores/gameStore'
+import { useClickMultiplierEffects } from '../hooks/useTemporaryEffects'
+import { TemporaryEffectProgressBar } from './TemporaryEffectProgressBar'
 import { formatNumber } from '../utils/numberFormatter'
+import { getRateColorClass, formatRate } from '../utils/rateColors'
 import { decimal } from '../utils/decimal'
 
 interface ClickButtonProps {
   className?: string
   disabled?: boolean
-  showClickValue?: boolean
   showFloatingNumbers?: boolean
 }
 
@@ -20,20 +22,23 @@ interface FloatingNumber {
 }
 
 /**
- * Main clickable button component
+ * Modern analytics-style clickable card component
  */
 export const ClickButton: React.FC<ClickButtonProps> = ({
   className = '',
   disabled = false,
-  showClickValue = true,
   showFloatingNumbers = true,
 }) => {
   const currency = useCurrency()
+  const totalClicksPerSecond = useTotalClicksPerSecond()
+  const activeClickEffects = useClickMultiplierEffects()
   const [isPressed, setIsPressed] = useState(false)
   const [floatingNumbers, setFloatingNumbers] = useState<FloatingNumber[]>([])
   const [clickValue, setClickValue] = useState(decimal(1))
-  const buttonRef = useRef<HTMLButtonElement>(null)
+  const buttonRef = useRef<HTMLDivElement>(null)
   const floatingIdRef = useRef(0)
+
+  const hasActiveEffect = activeClickEffects.length > 0
 
   // Update click value when game state changes
   useEffect(() => {
@@ -42,27 +47,24 @@ export const ClickButton: React.FC<ClickButtonProps> = ({
     const multiplier = decimal(state.clickMultiplier)
     const currentClickValue = baseValue.times(multiplier)
     setClickValue(currentClickValue)
-  }, [currency]) // Re-calculate when currency changes (indicating game state update)
+  }, [currency])
 
   // Clean up old floating numbers
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now()
       setFloatingNumbers(prev => 
-        prev.filter(num => now - num.timestamp < 2000) // Remove after 2 seconds
+        prev.filter(num => now - num.timestamp < 2000)
       )
     }, 100)
 
     return () => clearInterval(interval)
   }, [])
 
-  const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (disabled) return
 
-    // Perform the click in the game engine
     const earnedValue = gameEngine.performClick()
-    
-    // Update click value for display
     setClickValue(earnedValue)
 
     // Visual feedback
@@ -78,7 +80,7 @@ export const ClickButton: React.FC<ClickButtonProps> = ({
       const newFloatingNumber: FloatingNumber = {
         id: floatingIdRef.current++,
         value: `+${formatNumber(earnedValue)}`,
-        x: x + (Math.random() - 0.5) * 40, // Add some randomness
+        x: x + (Math.random() - 0.5) * 40,
         y: y + (Math.random() - 0.5) * 20,
         timestamp: Date.now(),
       }
@@ -87,65 +89,33 @@ export const ClickButton: React.FC<ClickButtonProps> = ({
     }
   }, [disabled, showFloatingNumbers])
 
-  const handleMouseDown = useCallback(() => {
-    if (!disabled) {
-      setIsPressed(true)
-    }
-  }, [disabled])
-
-  const handleMouseUp = useCallback(() => {
-    setIsPressed(false)
-  }, [])
-
-  const handleMouseLeave = useCallback(() => {
-    setIsPressed(false)
-  }, [])
-
   return (
-    <div className="click-button-container" style={{ position: 'relative' }}>
-      <button
+    <div className="click-button-container">
+      <div
         ref={buttonRef}
-        className={`click-button ${className} ${isPressed ? 'pressed' : ''} ${disabled ? 'disabled' : ''}`}
+        className={`analytics-card ${className} ${isPressed ? 'pressed' : ''} ${disabled ? 'disabled' : ''} ${hasActiveEffect ? 'has-effect' : ''}`}
         onClick={handleClick}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-        disabled={disabled}
-        style={{
-          width: '200px',
-          height: '200px',
-          borderRadius: '50%',
-          border: '4px solid #333',
-          backgroundColor: isPressed ? '#4CAF50' : '#45a049',
-          color: 'white',
-          fontSize: '18px',
-          fontWeight: 'bold',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          transition: 'all 0.1s ease',
-          transform: isPressed ? 'scale(0.95)' : 'scale(1)',
-          boxShadow: isPressed 
-            ? 'inset 0 4px 8px rgba(0,0,0,0.3)' 
-            : '0 4px 8px rgba(0,0,0,0.2)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-          userSelect: 'none',
-          outline: 'none',
-          position: 'relative',
-          overflow: 'visible',
-        }}
+        role="button"
+        tabIndex={0}
         aria-label={`Click to earn ${formatNumber(clickValue)} clicks`}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            handleClick(e as any)
+          }
+        }}
       >
-        <div style={{ fontSize: '24px' }}>👁️</div>
-        <div>GENERATE</div>
-        {showClickValue && (
-          <div style={{ fontSize: '14px', opacity: 0.9 }}>
-            +{formatNumber(clickValue)} clicks
-          </div>
+        <div className="card-header">Clicks</div>
+        <div className="card-value">{formatNumber(currency.floor())}</div>
+        <div className={`card-footer ${getRateColorClass(totalClicksPerSecond)}`}>
+          {formatRate(totalClicksPerSecond, formatNumber)}
+        </div>
+        
+        {/* Progress bar for active temporary effects */}
+        {hasActiveEffect && (
+          <TemporaryEffectProgressBar effects={activeClickEffects} />
         )}
-      </button>
+      </div>
 
       {/* Floating numbers */}
       {showFloatingNumbers && floatingNumbers.map(num => (
@@ -166,15 +136,12 @@ const FloatingNumberComponent: React.FC<{ number: FloatingNumber }> = ({ number 
   const [translateY, setTranslateY] = useState(0)
 
   useEffect(() => {
-    // Start animation
     const startTime = Date.now()
-    const duration = 2000 // 2 seconds
+    const duration = 2000
 
     const animate = () => {
       const elapsed = Date.now() - startTime
       const progress = Math.min(elapsed / duration, 1)
-
-      // Ease out animation
       const easeOut = 1 - Math.pow(1 - progress, 3)
       
       setOpacity(1 - progress)
@@ -194,7 +161,7 @@ const FloatingNumberComponent: React.FC<{ number: FloatingNumber }> = ({ number 
         position: 'absolute',
         left: `${number.x}px`,
         top: `${number.y}px`,
-        color: '#4CAF50',
+        color: '#10b981',
         fontWeight: 'bold',
         fontSize: '16px',
         pointerEvents: 'none',

@@ -3,8 +3,8 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import Decimal from 'decimal.js'
 import type { GameState, GameSettings, SerializableGameState, SaveData } from '../types/gameTypes'
 import { decimal, ZERO, ONE } from '../utils/decimal'
-import { INITIAL_UPGRADES } from '../data/upgrades'
-import { INITIAL_IDLE_GENERATORS } from '../data/idleGenerators'
+import { getInitialUpgrades } from '../data/upgrades'
+import { getInitialIdleGenerators } from '../data/idleGenerators'
 
 /**
  * Default game settings
@@ -17,6 +17,28 @@ const DEFAULT_SETTINGS: GameSettings = {
   showNotifications: true,
   offlineProgressNotification: true,
   theme: 'auto',
+}
+
+/**
+ * Game mode for balancing (testing vs production)
+ */
+export type GameMode = 'testing' | 'production'
+
+/**
+ * Current game mode - starts in testing mode for development
+ */
+let currentGameMode: GameMode = 'testing'
+
+/**
+ * Get current game mode
+ */
+export const getGameMode = (): GameMode => currentGameMode
+
+/**
+ * Set game mode
+ */
+export const setGameMode = (mode: GameMode): void => {
+  currentGameMode = mode
 }
 
 /**
@@ -38,6 +60,9 @@ function createInitialGameState(): GameState {
     gameStartTime: now,
     lastSaveTime: now,
     lastActiveTime: now,
+    
+    // Manual click rate tracking
+    recentClicks: [], // Array of timestamps for recent clicks
     
     // Click system
     clickMultiplier: ONE,
@@ -72,6 +97,9 @@ function createInitialGameState(): GameState {
     achievements: [],
     unlockedAchievements: new Set<string>(),
     
+    // Temporary effects
+    temporaryEffects: [],
+    
     // Settings
     settings: { ...DEFAULT_SETTINGS },
   }
@@ -92,6 +120,8 @@ function serializeGameState(state: GameState): SerializableGameState {
     gameStartTime: state.gameStartTime,
     lastSaveTime: state.lastSaveTime,
     lastActiveTime: state.lastActiveTime,
+    
+    recentClicks: state.recentClicks,
     
     clickMultiplier: state.clickMultiplier.toString(),
     baseClickValue: state.baseClickValue.toString(),
@@ -160,6 +190,11 @@ function serializeGameState(state: GameState): SerializableGameState {
     })),
     unlockedAchievements: Array.from(state.unlockedAchievements),
     
+    temporaryEffects: state.temporaryEffects.map(effect => ({
+      ...effect,
+      value: effect.value.toString(),
+    })),
+    
     settings: state.settings,
   }
 }
@@ -180,11 +215,14 @@ function deserializeGameState(serialized: SerializableGameState): GameState {
     lastSaveTime: serialized.lastSaveTime,
     lastActiveTime: serialized.lastActiveTime,
     
+    recentClicks: serialized.recentClicks || [],
+    
     clickMultiplier: decimal(serialized.clickMultiplier),
     baseClickValue: decimal(serialized.baseClickValue),
     
     idleGenerators: serialized.idleGenerators.map(gen => {
       // Find the original generator definition to restore functions
+      const INITIAL_IDLE_GENERATORS = getInitialIdleGenerators()
       const originalGenerator = INITIAL_IDLE_GENERATORS.find(orig => orig.id === gen.id)
       if (!originalGenerator) {
         console.warn(`Original generator definition not found for ${gen.id}`)
@@ -211,6 +249,7 @@ function deserializeGameState(serialized: SerializableGameState): GameState {
     
     upgrades: serialized.upgrades.map(upgrade => {
       // Find the original upgrade definition to restore functions
+      const INITIAL_UPGRADES = getInitialUpgrades()
       const originalUpgrade = INITIAL_UPGRADES.find(orig => orig.id === upgrade.id)
       if (!originalUpgrade) {
         console.warn(`Original upgrade definition not found for ${upgrade.id}`)
@@ -288,6 +327,13 @@ function deserializeGameState(serialized: SerializableGameState): GameState {
     })),
     unlockedAchievements: new Set(serialized.unlockedAchievements),
     
+    temporaryEffects: (serialized.temporaryEffects || []).map(effect => ({
+      ...effect,
+      value: decimal(effect.value),
+      apply: () => {}, // Will be restored by game engine
+      remove: () => {}, // Will be restored by game engine
+    })),
+    
     settings: serialized.settings,
   }
 }
@@ -306,6 +352,7 @@ interface GameStore {
   updateEngagement: (amount: Decimal) => void
   updateInfluence: (amount: Decimal) => void
   addClicks: (count: number) => void
+  addManualClick: () => void
   updateLastActiveTime: () => void
   updateSettings: (settings: Partial<GameSettings>) => void
   resetGame: () => void
@@ -390,6 +437,24 @@ export const useGameStore = create<GameStore>()(
             lastActiveTime: Date.now(),
           },
         }))
+      },
+      
+      addManualClick: () => {
+        const now = Date.now()
+        set((state) => {
+          // Add current timestamp and filter out clicks older than 2 seconds
+          const recentClicks = [...state.gameState.recentClicks, now]
+            .filter(timestamp => now - timestamp <= 2000)
+          
+          return {
+            gameState: {
+              ...state.gameState,
+              recentClicks,
+              totalClicks: state.gameState.totalClicks + 1,
+              lastActiveTime: now,
+            },
+          }
+        })
       },
       
       updateLastActiveTime: () => {
@@ -513,6 +578,7 @@ export const useGameStore = create<GameStore>()(
             idleMultiplier: decimal(persistedState.gameState.idleMultiplier || 1),
             prestigePoints: decimal(persistedState.gameState.prestigePoints || 0),
             metaPrestigePoints: decimal(persistedState.gameState.metaPrestigePoints || 0),
+            recentClicks: persistedState.gameState.recentClicks || [], // Ensure recentClicks exists
           }
           
           return {
@@ -539,6 +605,7 @@ export const useSettings = () => useGameStore((state) => state.gameState.setting
 export const useUpgrades = () => useGameStore((state) => state.gameState.upgrades)
 export const useGenerators = () => useGameStore((state) => state.gameState.idleGenerators)
 export const usePrestigePoints = () => useGameStore((state) => state.gameState.prestigePoints)
+export const useTotalEarned = () => useGameStore((state) => state.gameState.totalEarned)
 export const useMetaPrestigePoints = () => useGameStore((state) => state.gameState.metaPrestigePoints)
 export const useAchievements = () => useGameStore((state) => state.gameState.achievements)
 export const useAutomation = () => useGameStore((state) => state.gameState.automationSystems)
@@ -563,6 +630,62 @@ export const useVisibleUpgrades = () => {
 }
 
 /**
+ * Rate calculation selectors
+ */
+export const useViewsPerSecond = () => {
+  const gameState = useGameStore((state) => state.gameState)
+  
+  // Calculate total Views production per second from idle generators
+  let totalProduction = decimal(0)
+  
+  for (const generator of gameState.idleGenerators) {
+    if (generator.owned > 0) {
+      const generatorProduction = decimal(generator.baseProduction).times(generator.owned)
+      totalProduction = totalProduction.plus(generatorProduction)
+    }
+  }
+  
+  // Apply global idle multiplier
+  totalProduction = totalProduction.times(gameState.idleMultiplier)
+  
+  return totalProduction
+}
+
+export const useClicksPerSecondFromViews = () => {
+  const viewsPerSecond = useViewsPerSecond()
+  
+  // Views convert to Clicks at 10:1 ratio
+  return viewsPerSecond.dividedBy(10)
+}
+
+/**
+ * Calculate total clicks per second from all sources
+ */
+export const useTotalClicksPerSecond = () => {
+  const gameState = useGameStore((state) => state.gameState)
+  const clicksFromViews = useClicksPerSecondFromViews()
+  
+  // Calculate manual click rate from recent clicks (2-second window)
+  const now = Date.now()
+  const recentClicks = gameState.recentClicks || [] // Safety check for undefined
+  const recentClicksInWindow = recentClicks.filter(timestamp => now - timestamp <= 2000)
+  const manualClickRate = decimal(recentClicksInWindow.length).dividedBy(2) // clicks per second over 2 seconds
+  
+  // Combine manual clicks with passive sources
+  let totalClickRate = clicksFromViews.plus(manualClickRate)
+  
+  // Add automation systems if any
+  for (const automation of gameState.automationSystems) {
+    if (automation.owned > 0) {
+      const automationRate = decimal(automation.clicksPerSecond).times(automation.owned)
+      totalClickRate = totalClickRate.plus(automationRate)
+    }
+  }
+  
+  return totalClickRate
+}
+
+/**
  * Action hooks
  */
 export const useGameActions = () => {
@@ -571,6 +694,7 @@ export const useGameActions = () => {
     updateCurrency: store.updateCurrency,
     setCurrency: store.setCurrency,
     addClicks: store.addClicks,
+    addManualClick: store.addManualClick,
     updateLastActiveTime: store.updateLastActiveTime,
     updateSettings: store.updateSettings,
     resetGame: store.resetGame,

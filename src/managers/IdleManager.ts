@@ -1,6 +1,6 @@
 import type { IdleGenerator, GameState, OfflineProgress } from '../types/gameTypes'
-import { decimal, add, multiply, greaterThanOrEqual, ZERO } from '../utils/decimal'
-import { INITIAL_IDLE_GENERATORS } from '../data/idleGenerators'
+import { decimal, add, multiply, greaterThanOrEqual, calculateStrategyPointsMultiplier, ZERO } from '../utils/decimal'
+import { getInitialIdleGenerators } from '../data/idleGenerators'
 
 /**
  * Manages idle generation systems and offline progress
@@ -10,6 +10,8 @@ export class IdleManager {
    * Initialize idle generators in the game state if not already present
    */
   public initializeGenerators(gameState: GameState): void {
+    const INITIAL_IDLE_GENERATORS = getInitialIdleGenerators() // Get fresh values based on current mode
+    
     if (gameState.idleGenerators.length === 0) {
       gameState.idleGenerators = INITIAL_IDLE_GENERATORS.map(generator => ({
         ...generator,
@@ -22,6 +24,15 @@ export class IdleManager {
   }
 
   /**
+   * Refresh generators with current game mode values
+   */
+  public refreshGenerators(gameState: GameState): void {
+    // Re-initialize generators to pick up new mode values
+    gameState.idleGenerators = []
+    this.initializeGenerators(gameState)
+  }
+
+  /**
    * Calculate total idle production per second
    */
   public calculateTotalProduction(gameState: GameState): import('decimal.js').default {
@@ -31,7 +42,7 @@ export class IdleManager {
     for (const generator of gameState.idleGenerators) {
       if (generator.owned > 0) {
         const generatorProduction = multiply(
-          generator.baseProduction,
+          decimal(generator.baseProduction),
           decimal(generator.owned)
         )
         totalProduction = add(totalProduction, generatorProduction)
@@ -39,7 +50,7 @@ export class IdleManager {
     }
     
     // Apply global idle multiplier
-    totalProduction = multiply(totalProduction, gameState.idleMultiplier)
+    totalProduction = multiply(totalProduction, decimal(gameState.idleMultiplier))
     
     return totalProduction
   }
@@ -76,7 +87,11 @@ export class IdleManager {
     
     // Calculate idle earnings
     const totalProduction = this.calculateTotalProduction(gameState)
-    const idleEarnings = multiply(totalProduction, decimal(effectiveHours * 3600))
+    let idleEarnings = multiply(totalProduction, decimal(effectiveHours * 3600))
+    
+    // Apply strategy points bonus to offline idle earnings
+    const strategyBonus = calculateStrategyPointsMultiplier(gameState.prestigePoints)
+    idleEarnings = multiply(idleEarnings, strategyBonus)
     
     // No automation earnings for now (will be added when automation system is implemented)
     const automationEarnings = ZERO
@@ -115,12 +130,13 @@ export class IdleManager {
     
     for (let i = 0; i < amount; i++) {
       const currentOwned = generator.owned + i
-      const multiplier = generator.costMultiplier.pow(currentOwned)
-      const cost = multiply(generator.baseCost, multiplier)
+      const multiplier = decimal(generator.costMultiplier).pow(currentOwned)
+      const cost = multiply(decimal(generator.baseCost), multiplier)
       totalCost = add(totalCost, cost)
     }
     
-    return totalCost
+    // Round up to nearest integer
+    return totalCost.ceil()
   }
 
   /**
@@ -184,6 +200,73 @@ export class IdleManager {
           console.warn(`Error checking unlock condition for generator ${generator.id}:`, error)
         }
       }
+    }
+  }
+
+  /**
+   * Calculate the maximum number of generators that can be purchased
+   */
+  public getMaxAffordableGenerators(generator: IdleGenerator, gameState: GameState): number {
+    if (!generator.unlocked) {
+      return 0
+    }
+
+    const currency = decimal(gameState.currency)
+    let totalCost = decimal(0)
+    let count = 0
+
+    // Calculate how many we can afford by simulating purchases
+    for (let i = 0; i < 1000; i++) { // Cap at 1000 to prevent infinite loops
+      const currentOwned = generator.owned + i
+      const costMultiplier = decimal(generator.costMultiplier).pow(currentOwned)
+      const cost = multiply(decimal(generator.baseCost), costMultiplier).ceil()
+      
+      if (totalCost.plus(cost).lessThanOrEqualTo(currency)) {
+        totalCost = totalCost.plus(cost)
+        count++
+      } else {
+        break
+      }
+    }
+
+    return count
+  }
+
+  /**
+   * Purchase maximum affordable generators
+   */
+  public purchaseMaxGenerators(generatorId: string, gameState: GameState): number {
+    const generator = gameState.idleGenerators.find(g => g.id === generatorId)
+    
+    if (!generator) {
+      console.warn(`Generator not found: ${generatorId}`)
+      return 0
+    }
+
+    const maxAffordable = this.getMaxAffordableGenerators(generator, gameState)
+    if (maxAffordable === 0) {
+      return 0
+    }
+
+    try {
+      const totalCost = this.getGeneratorCost(generator, maxAffordable)
+      
+      // Deduct cost
+      gameState.currency = gameState.currency.minus(totalCost)
+      
+      // Add generators
+      generator.owned += maxAffordable
+      
+      // Update unlock status
+      generator.unlocked = true
+      
+      // Check if any other generators should be unlocked
+      this.updateGeneratorUnlocks(gameState)
+      
+      return maxAffordable
+    } catch (error) {
+      console.error(`Error purchasing max generators ${generatorId}:`, error)
+      return 0
     }
   }
 

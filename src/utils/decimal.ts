@@ -187,6 +187,14 @@ export function toDecimalSafe(value: unknown): Decimal {
 }
 
 /**
+ * Calculate strategy points multiplier
+ * Formula: 1 + (strategy points * 0.1) = 10% bonus per strategy point
+ */
+export function calculateStrategyPointsMultiplier(prestigePoints: Decimal.Value): Decimal {
+  return decimal(1).plus(decimal(prestigePoints).times(0.1))
+}
+
+/**
  * Common game constants as Decimals
  */
 export const ZERO = new Decimal(0)
