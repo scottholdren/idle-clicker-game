@@ -66,7 +66,7 @@ export interface IdleGenerator {
   costMultiplier: Decimal
   owned: number
   unlocked: boolean
-  unlockCondition?: () => boolean
+  unlockCondition?: (gameState: GameState) => boolean
 }
 
 /**
@@ -81,7 +81,7 @@ export interface Upgrade {
   maxPurchases: number
   currentPurchases: number
   unlocked: boolean
-  unlockCondition?: () => boolean
+  unlockCondition?: (gameState: GameState) => boolean
   effect: UpgradeEffect
 }
 

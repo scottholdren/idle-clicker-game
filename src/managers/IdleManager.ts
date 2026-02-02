@@ -175,7 +175,7 @@ export class IdleManager {
     for (const generator of gameState.idleGenerators) {
       if (!generator.unlocked && generator.unlockCondition) {
         try {
-          generator.unlocked = generator.unlockCondition()
+          generator.unlocked = generator.unlockCondition(gameState)
         } catch (error) {
           console.warn(`Error checking unlock condition for generator ${generator.id}:`, error)
         }
@@ -191,7 +191,7 @@ export class IdleManager {
       generator.owned = 0
       // Keep unlock status for generators that should remain unlocked
       if (generator.unlockCondition) {
-        generator.unlocked = generator.unlockCondition()
+        generator.unlocked = generator.unlockCondition(gameState)
       }
     }
   }

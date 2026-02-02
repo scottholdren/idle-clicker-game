@@ -134,7 +134,7 @@ This implementation plan breaks down the idle clicker game into discrete coding 
     - **Property 15: Error Handling Preservation**
     - **Validates: Requirements 5.3, 6.5**
 
-- [-] 9. Checkpoint - Core Game Loop Complete
+- [x] 9. Checkpoint - Core Game Loop Complete
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 10. Automation System

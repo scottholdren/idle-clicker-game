@@ -50,12 +50,15 @@ export class UpgradeManager {
   public isUpgradeUnlocked(upgrade: Upgrade, gameState: GameState): boolean {
     if (!upgrade.unlocked) {
       // Check unlock condition
-      try {
-        return upgrade.unlockCondition(gameState)
-      } catch (error) {
-        console.warn(`Error checking unlock condition for upgrade ${upgrade.id}:`, error)
-        return false
+      if (upgrade.unlockCondition) {
+        try {
+          return upgrade.unlockCondition(gameState)
+        } catch (error) {
+          console.warn(`Error checking unlock condition for upgrade ${upgrade.id}:`, error)
+          return false
+        }
       }
+      return false
     }
     return true
   }
@@ -140,7 +143,7 @@ export class UpgradeManager {
    */
   public updateUpgradeUnlocks(gameState: GameState): void {
     for (const upgrade of gameState.upgrades) {
-      if (!upgrade.unlocked) {
+      if (!upgrade.unlocked && upgrade.unlockCondition) {
         try {
           upgrade.unlocked = upgrade.unlockCondition(gameState)
         } catch (error) {
@@ -190,7 +193,11 @@ export class UpgradeManager {
       upgrade.currentPurchases = 0
       // Keep unlock status for upgrades that should remain unlocked
       // Reset unlock status and let the unlock condition determine it
-      upgrade.unlocked = upgrade.unlockCondition(gameState)
+      if (upgrade.unlockCondition) {
+        upgrade.unlocked = upgrade.unlockCondition(gameState)
+      } else {
+        upgrade.unlocked = false
+      }
     }
     gameState.purchasedUpgrades.clear()
   }
