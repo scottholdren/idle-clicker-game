@@ -538,19 +538,28 @@ export const useGameStore = create<GameStore>()(
       // Utility
       getGameState: () => {
         const gameState = get().gameState
-        // Ensure all Decimal fields are proper Decimal objects
+        
+        // Safety check: ensure gameState exists
+        if (!gameState) {
+          console.warn('Game state is undefined, returning initial state')
+          return createInitialGameState()
+        }
+        
+        // Ensure all Decimal fields are proper Decimal objects and temporaryEffects exists
         return {
           ...gameState,
-          currency: decimal(gameState.currency),
-          views: decimal(gameState.views),
-          engagement: decimal(gameState.engagement),
-          influence: decimal(gameState.influence),
-          totalEarned: decimal(gameState.totalEarned),
-          baseClickValue: decimal(gameState.baseClickValue),
-          clickMultiplier: decimal(gameState.clickMultiplier),
-          idleMultiplier: decimal(gameState.idleMultiplier),
-          prestigePoints: decimal(gameState.prestigePoints),
-          metaPrestigePoints: decimal(gameState.metaPrestigePoints),
+          currency: decimal(gameState.currency || 0),
+          views: decimal(gameState.views || 0),
+          engagement: decimal(gameState.engagement || 1),
+          influence: decimal(gameState.influence || 0),
+          totalEarned: decimal(gameState.totalEarned || 0),
+          baseClickValue: decimal(gameState.baseClickValue || 1),
+          clickMultiplier: decimal(gameState.clickMultiplier || 1),
+          idleMultiplier: decimal(gameState.idleMultiplier || 1),
+          prestigePoints: decimal(gameState.prestigePoints || 0),
+          metaPrestigePoints: decimal(gameState.metaPrestigePoints || 0),
+          temporaryEffects: gameState.temporaryEffects || [], // Ensure temporaryEffects exists
+          recentClicks: gameState.recentClicks || [], // Ensure recentClicks exists
         }
       },
       

@@ -205,9 +205,24 @@ export class GameEngine implements IGameEngine {
   private updateTemporaryEffects(): void {
     const state = this.getGameState()
     
-    // Safety check: ensure temporaryEffects array exists
-    if (!state.temporaryEffects || !Array.isArray(state.temporaryEffects)) {
+    // Safety check: ensure state exists and temporaryEffects array exists
+    if (!state) {
+      console.warn('Game state is undefined in updateTemporaryEffects')
+      return
+    }
+    
+    if (!state.temporaryEffects) {
       state.temporaryEffects = []
+      // Update the store with the initialized array
+      this.getStore().setGameState(state)
+      return
+    }
+    
+    if (!Array.isArray(state.temporaryEffects)) {
+      console.warn('temporaryEffects is not an array, reinitializing')
+      state.temporaryEffects = []
+      // Update the store with the reinitialized array
+      this.getStore().setGameState(state)
       return
     }
     
@@ -217,12 +232,22 @@ export class GameEngine implements IGameEngine {
     // Check for expired effects
     for (let i = 0; i < state.temporaryEffects.length; i++) {
       const effect = state.temporaryEffects[i]
+      
+      // Safety check for effect object
+      if (!effect || typeof effect.startTime !== 'number' || typeof effect.duration !== 'number') {
+        console.warn(`Invalid temporary effect at index ${i}:`, effect)
+        expiredEffects.push(i)
+        continue
+      }
+      
       const elapsed = now - effect.startTime
       
       if (elapsed >= effect.duration) {
         // Effect has expired, remove it
         try {
-          effect.remove(state)
+          if (typeof effect.remove === 'function') {
+            effect.remove(state)
+          }
         } catch (error) {
           console.warn(`Error removing temporary effect ${effect.id}:`, error)
         }
