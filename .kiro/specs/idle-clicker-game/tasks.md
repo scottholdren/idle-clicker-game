@@ -103,7 +103,7 @@ This implementation plan breaks down the idle clicker game into discrete coding 
     - **Property 2: Offline Progress Calculation**
     - **Validates: Requirements 2.1, 2.3, 2.4, 2.5**
   
-  - [-] 7.3 Create idle generator UI
+  - [x] 7.3 Create idle generator UI
     - Build generator purchase and display components
     - Add offline progress summary modal
     - Implement income rate display and progress indicators

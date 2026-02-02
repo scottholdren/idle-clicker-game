@@ -69,11 +69,24 @@ export class GameEngine implements IGameEngine {
     this.upgradeManager.initializeUpgrades(state)
     this.idleManager.initializeGenerators(state)
     
+    // Track if we need to update the store
+    let stateChanged = false
+    
     // Update upgrade unlock conditions
+    const upgradesBeforeUpdate = state.upgrades.map(u => u.unlocked)
     this.upgradeManager.updateUpgradeUnlocks(state)
+    const upgradesAfterUpdate = state.upgrades.map(u => u.unlocked)
+    if (JSON.stringify(upgradesBeforeUpdate) !== JSON.stringify(upgradesAfterUpdate)) {
+      stateChanged = true
+    }
     
     // Update generator unlock conditions
+    const generatorsBeforeUpdate = state.idleGenerators.map(g => g.unlocked)
     this.idleManager.updateGeneratorUnlocks(state)
+    const generatorsAfterUpdate = state.idleGenerators.map(g => g.unlocked)
+    if (JSON.stringify(generatorsBeforeUpdate) !== JSON.stringify(generatorsAfterUpdate)) {
+      stateChanged = true
+    }
 
     // Update idle progress
     const idleEarnings = this.updateIdleProgress(deltaTime)
@@ -89,6 +102,11 @@ export class GameEngine implements IGameEngine {
     
     // Update last active time
     this.getStore().updateLastActiveTime()
+    
+    // If unlock states changed, update the store
+    if (stateChanged) {
+      this.getStore().setGameState(state)
+    }
   }
 
   /**
@@ -625,6 +643,22 @@ if (typeof window !== 'undefined') {
     window.location.reload()
   }
   
+  (window as any).debugGameState = () => {
+    const state = gameEngine.getGameState()
+    console.log('Current Game State:')
+    console.log('Currency:', state.currency.toString())
+    console.log('Total Earned:', state.totalEarned.toString())
+    console.log('Total Clicks:', state.totalClicks)
+    console.log('Generators:', state.idleGenerators.map(g => ({
+      id: g.id,
+      name: g.name,
+      unlocked: g.unlocked,
+      owned: g.owned
+    })))
+    return state
+  }
+  
   console.log('Debug commands available:')
   console.log('- clearGameData() - Clear all save data and reload')
+  console.log('- debugGameState() - Show current game state')
 }
