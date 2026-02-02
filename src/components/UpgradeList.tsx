@@ -63,10 +63,14 @@ export const UpgradeList: React.FC = () => {
   const currency = useCurrency()
   
   const handlePurchase = (upgradeId: string) => {
-    gameEngine.purchaseUpgrade(upgradeId)
+    try {
+      gameEngine.purchaseUpgrade(upgradeId)
+    } catch (error) {
+      console.error('Error purchasing upgrade:', error)
+    }
   }
   
-  if (upgrades.length === 0) {
+  if (!upgrades || upgrades.length === 0) {
     return (
       <div className="upgrade-list empty">
         <p>No upgrades available yet. Keep generating clicks to unlock improvements!</p>
@@ -79,17 +83,22 @@ export const UpgradeList: React.FC = () => {
       <h2>Improvements</h2>
       <div className="upgrade-grid">
         {upgrades.map(upgrade => {
-          const cost = gameEngine.getUpgradeCost(upgrade)
-          const canAfford = decimal(currency).greaterThanOrEqual(cost)
-          
-          return (
-            <UpgradeItem
-              key={upgrade.id}
-              upgrade={upgrade}
-              canAfford={canAfford}
-              onPurchase={handlePurchase}
-            />
-          )
+          try {
+            const cost = gameEngine.getUpgradeCost(upgrade)
+            const canAfford = decimal(currency).greaterThanOrEqualTo(cost)
+            
+            return (
+              <UpgradeItem
+                key={upgrade.id}
+                upgrade={upgrade}
+                canAfford={canAfford}
+                onPurchase={handlePurchase}
+              />
+            )
+          } catch (error) {
+            console.error(`Error rendering upgrade ${upgrade.id}:`, error)
+            return null
+          }
         })}
       </div>
     </div>
