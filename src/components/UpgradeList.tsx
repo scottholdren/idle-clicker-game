@@ -37,7 +37,7 @@ const UpgradeItem: React.FC<UpgradeItemProps> = ({ upgrade, canAfford, onPurchas
           {!isMaxed && (
             <div className="upgrade-buttons">
               <button 
-                className={`upgrade-button-small ${canAfford ? 'can-afford' : 'cannot-afford'}`}
+                className={`buy-button-small ${canAfford ? 'can-afford' : 'cannot-afford'}`}
                 onClick={() => onPurchase(upgrade.id)}
                 disabled={!canAfford}
               >
@@ -45,7 +45,7 @@ const UpgradeItem: React.FC<UpgradeItemProps> = ({ upgrade, canAfford, onPurchas
               </button>
               {maxAffordable > 1 && (
                 <button 
-                  className={`upgrade-button-small max-buy ${maxAffordable > 0 ? 'can-afford' : 'cannot-afford'}`}
+                  className={`buy-button-small max-buy ${maxAffordable > 0 ? 'can-afford' : 'cannot-afford'}`}
                   onClick={handleMaxPurchase}
                   disabled={maxAffordable === 0}
                 >
@@ -68,18 +68,19 @@ const UpgradeItem: React.FC<UpgradeItemProps> = ({ upgrade, canAfford, onPurchas
         <div className="upgrade-stats">
           {upgrade.currentPurchases > 0 ? (
             <div className="upgrade-effect">
-              {cumulativeEffect.type}: {
-                cumulativeEffect.type.includes('Multiplier') ? 
+              <span style={{ color: '#888888' }}>Level: </span>
+              <span style={{ color: '#4caf50' }}>
+                {cumulativeEffect.type.includes('Multiplier') ? 
                   `${formatNumber(cumulativeEffect.value)}x` :
-                  `+${formatNumber(cumulativeEffect.value)}`
-              }
+                  `+${formatNumber(cumulativeEffect.value)}`}
+              </span>
             </div>
           ) : (
-            <div className="upgrade-effect">
-              Next: {upgrade.effect.type === 'clickMultiplier' ? 'Click x' : 
-                     upgrade.effect.type === 'idleMultiplier' ? 'Idle x' : 
-                     upgrade.effect.type === 'special' ? '+' : ''}
-              {formatNumber(upgrade.effect.value)}
+            <div className="upgrade-effect" style={{ color: '#888888' }}>
+              Level: {upgrade.effect.type === 'clickMultiplier' ? 'x1' : 
+                      upgrade.effect.type === 'idleMultiplier' ? 'x1' : 
+                      upgrade.effect.type === 'special' ? '+0' : 
+                      '+0'}
             </div>
           )}
         </div>
@@ -111,12 +112,12 @@ export const UpgradeList: React.FC = () => {
       <h2>
         Engagement Signals
         <EngagementMultiplierTooltip>
-          <span className="section-summary"> ({formatNumber(totalClickMultiplier)} clicks per click)</span>
+          <span className="section-summary"> ({formatNumber(totalClickMultiplier)} {totalClickMultiplier.equals(1) ? 'click' : 'clicks'} per click)</span>
         </EngagementMultiplierTooltip>
       </h2>
       {(!upgrades || upgrades.length === 0) ? (
-        <div className="empty-state">
-          <p>No upgrades available yet. Keep generating clicks to unlock improvements!</p>
+        <div className="upgrade-grid">
+          <p style={{ textAlign: 'center' }}>None available - Keep clicking to unlock them!</p>
         </div>
       ) : (
         <div className="upgrade-grid">

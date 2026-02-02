@@ -108,7 +108,7 @@ export const ClickButton: React.FC<ClickButtonProps> = ({
         <div className="card-header">Clicks</div>
         <div className="card-value">{formatNumber(currency.floor())}</div>
         <div className={`card-footer ${getRateColorClass(totalClicksPerSecond)}`}>
-          {formatRate(totalClicksPerSecond, formatNumber)}
+          {formatRate(totalClicksPerSecond.floor(), formatNumber)}
         </div>
         
         {/* Progress bar for active temporary effects */}

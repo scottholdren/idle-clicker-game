@@ -3,6 +3,7 @@ import { useGenerators, useCurrency, useGameActions, useViewsPerSecond, useClick
 import { gameEngine } from '../engine/gameEngine'
 import { formatNumber } from '../utils/numberFormatter'
 import { decimal, calculateStrategyPointsMultiplier } from '../utils/decimal'
+import TrafficSourcesTooltip from './TrafficSourcesTooltip'
 
 export function GeneratorList() {
   const generators = useGenerators()
@@ -42,11 +43,13 @@ export function GeneratorList() {
       {/* TODO: Section title will change dynamically through game progression */}
       <h2>
         Traffic Sources
-        <span className="section-summary"> ({formatNumber(viewsPerSecond)} views/sec → {formatNumber(clicksPerSecondFromViews)} clicks/sec)</span>
+        <TrafficSourcesTooltip>
+          <span className="section-summary"> ({formatNumber(viewsPerSecond)} views/sec → {formatNumber(clicksPerSecondFromViews)} clicks/sec)</span>
+        </TrafficSourcesTooltip>
       </h2>
       {visibleGenerators.length === 0 ? (
-        <div className="empty-state">
-          <p>No traffic sources available yet. Keep clicking to unlock them!</p>
+        <div className="generator-grid">
+          <p style={{ textAlign: 'center' }}>None available - Keep clicking to unlock them!</p>
         </div>
       ) : (
         <div className="generator-grid">
@@ -66,7 +69,7 @@ export function GeneratorList() {
                     <h3 className="generator-name">{generator.name}</h3>
                     <div className="generator-buttons">
                       <button
-                        className={`generator-button-small ${canAfford ? 'can-afford' : 'cannot-afford'}`}
+                        className={`buy-button-small ${canAfford ? 'can-afford' : 'cannot-afford'}`}
                         onClick={() => handlePurchase(generator.id)}
                         disabled={!canAfford}
                       >
@@ -74,7 +77,7 @@ export function GeneratorList() {
                       </button>
                       {maxAffordable > 1 && (
                         <button
-                          className={`generator-button-small max-buy ${maxAffordable > 0 ? 'can-afford' : 'cannot-afford'}`}
+                          className={`buy-button-small max-buy ${maxAffordable > 0 ? 'can-afford' : 'cannot-afford'}`}
                           onClick={() => handleMaxPurchase(generator.id)}
                           disabled={maxAffordable === 0}
                         >
@@ -92,12 +95,10 @@ export function GeneratorList() {
                   <p className="generator-description">{generator.description}</p>
                   <div className="generator-stats">
                     <div className="generator-production">
-                      Production: {formatNumber(generator.baseProduction)}/sec
-                      {generator.owned > 0 && (
-                        <span className="total-production">
-                          {' '}(Total: {formatNumber(productionPerSecond)}/sec)
-                        </span>
-                      )}
+                      <span style={{ color: '#888888' }}>Traffic: </span>
+                      <span style={{ color: generator.owned > 0 ? '#4caf50' : '#888888' }}>
+                        {formatNumber(productionPerSecond)}/sec
+                      </span>
                     </div>
                   </div>
                 </div>

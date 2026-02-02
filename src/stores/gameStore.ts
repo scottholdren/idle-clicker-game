@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import Decimal from 'decimal.js'
 import type { GameState, GameSettings, SerializableGameState, SaveData } from '../types/gameTypes'
-import { decimal, ZERO, ONE } from '../utils/decimal'
+import { decimal, ZERO, ONE, calculateViewToClickEfficiency, calculateStrategyPointsMultiplier } from '../utils/decimal'
 import { getInitialUpgrades } from '../data/upgrades'
 import { getInitialIdleGenerators } from '../data/idleGenerators'
 
@@ -20,25 +20,37 @@ const DEFAULT_SETTINGS: GameSettings = {
 }
 
 /**
- * Game mode for balancing (testing vs production)
+ * Base click boost for testing/debugging
  */
-export type GameMode = 'testing' | 'production'
+export type BaseClickMode = 0 | 10 | 100
 
 /**
- * Current game mode - starts in testing mode for development
+ * Current base click boost - starts at 0 for normal gameplay
  */
-let currentGameMode: GameMode = 'testing'
+let currentBaseClickBoost: BaseClickMode = 0
 
 /**
- * Get current game mode
+ * Get current base click boost
  */
-export const getGameMode = (): GameMode => currentGameMode
+export const getBaseClickBoost = (): BaseClickMode => currentBaseClickBoost
 
 /**
- * Set game mode
+ * Set base click boost
  */
-export const setGameMode = (mode: GameMode): void => {
-  currentGameMode = mode
+export const setBaseClickBoost = (boost: BaseClickMode): void => {
+  currentBaseClickBoost = boost
+}
+
+/**
+ * Cycle to next base click boost mode
+ */
+export const cycleBaseClickBoost = (): BaseClickMode => {
+  switch (currentBaseClickBoost) {
+    case 0: currentBaseClickBoost = 10; break
+    case 10: currentBaseClickBoost = 100; break
+    case 100: currentBaseClickBoost = 0; break
+  }
+  return currentBaseClickBoost
 }
 
 /**
@@ -663,10 +675,15 @@ export const useViewsPerSecond = () => {
 }
 
 export const useClicksPerSecondFromViews = () => {
+  const gameState = useGameStore((state) => state.gameState)
   const viewsPerSecond = useViewsPerSecond()
   
-  // Views convert to Clicks at 10:1 ratio
-  return viewsPerSecond.dividedBy(10)
+  // Calculate view-to-click efficiency based on total earned clicks and prestige multiplier
+  const strategyBonus = calculateStrategyPointsMultiplier(gameState.prestigePoints)
+  const efficiency = calculateViewToClickEfficiency(gameState.totalEarned, strategyBonus)
+  
+  // Views convert to Clicks based on efficiency
+  return viewsPerSecond.times(efficiency)
 }
 
 /**

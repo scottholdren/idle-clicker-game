@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useGameStore, getGameMode } from '../stores/gameStore'
+import { useGameStore } from '../stores/gameStore'
 import { gameEngine } from '../engine/gameEngine'
 import { formatNumber } from '../utils/numberFormatter'
 import { decimal } from '../utils/decimal'
@@ -11,7 +11,7 @@ export function PrestigeButton() {
     const canPrestige = gameEngine.canPrestige()
     const prestigeGain = gameEngine.calculatePrestigeGain()
     const totalEarned = gameState.totalEarned
-    const required = decimal(getGameMode() === 'testing' ? 1000 : 50000) // Dynamic threshold
+    const required = decimal(50000) // Fixed at production value
     const remaining = required.minus(totalEarned)
     
     return {

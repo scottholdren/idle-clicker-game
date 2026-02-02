@@ -187,11 +187,38 @@ export function toDecimalSafe(value: unknown): Decimal {
 }
 
 /**
- * Calculate strategy points multiplier
- * Formula: 1 + (strategy points * 0.1) = 10% bonus per strategy point
+ * Calculate strategy points multiplier with logarithmic scaling
+ * Formula: 1 + log10(SP + 1) * 10
+ * This provides strong early growth that naturally slows down
+ * At 1M SP: ~61x multiplier
  */
 export function calculateStrategyPointsMultiplier(prestigePoints: Decimal.Value): Decimal {
-  return decimal(1).plus(decimal(prestigePoints).times(0.1))
+  const sp = decimal(prestigePoints)
+  const logBonus = Math.log10(sp.plus(1).toNumber()) * 10
+  return decimal(1).plus(logBonus)
+}
+
+/**
+ * Calculate view-to-click conversion efficiency based on total earned clicks
+ * Base: 10% (1 click per 10 views)
+ * Improves by 0.1% per 1000 total earned clicks
+ * Prestige multiplier affects the efficiency gain rate
+ * Soft capped at 50% (5 clicks per 10 views)
+ */
+export function calculateViewToClickEfficiency(totalEarned: Decimal.Value, prestigeMultiplier: Decimal.Value): Decimal {
+  const baseEfficiency = 0.1 // 10% base conversion rate
+  const maxEfficiency = 0.5 // 50% max conversion rate (soft cap)
+  
+  // Calculate efficiency gain: 0.1% per 1000 total earned clicks, affected by prestige multiplier
+  const prestigeBonus = decimal(prestigeMultiplier)
+  const totalEarnedNum = decimal(totalEarned).toNumber()
+  const efficiencyGainPer1000 = 0.001 // 0.1%
+  const efficiencyGain = (totalEarnedNum / 1000) * efficiencyGainPer1000 * prestigeBonus.toNumber()
+  
+  // Apply soft cap
+  const totalEfficiency = Math.min(baseEfficiency + efficiencyGain, maxEfficiency)
+  
+  return decimal(totalEfficiency)
 }
 
 /**

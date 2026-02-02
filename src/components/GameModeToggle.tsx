@@ -1,30 +1,34 @@
 import { useState } from 'react'
-import { getGameMode, setGameMode, type GameMode } from '../stores/gameStore'
-import { gameEngine } from '../engine/gameEngine'
+import { getBaseClickBoost, cycleBaseClickBoost, type BaseClickMode } from '../stores/gameStore'
 
-export function GameModeToggle() {
-  const [currentMode, setCurrentMode] = useState<GameMode>(getGameMode())
+export function BaseClickToggle() {
+  const [currentBoost, setCurrentBoost] = useState<BaseClickMode>(getBaseClickBoost())
   
   const handleToggle = () => {
-    const newMode: GameMode = currentMode === 'testing' ? 'production' : 'testing'
-    setGameMode(newMode)
-    setCurrentMode(newMode)
-    
-    // Refresh game data with new mode values
-    gameEngine.refreshGameMode()
-    
-    // Show confirmation message
-    const modeText = newMode === 'testing' ? 'Testing (low costs)' : 'Production (realistic costs)'
-    alert(`Switched to ${modeText} mode.\n\nGame data has been refreshed with new values.`)
+    const newBoost = cycleBaseClickBoost()
+    setCurrentBoost(newBoost)
+  }
+  
+  const getButtonText = () => {
+    switch (currentBoost) {
+      case 0: return 'Base Click 0'
+      case 10: return 'Base Click 10'
+      case 100: return 'Base Click 100'
+    }
+  }
+  
+  const getTooltipText = () => {
+    const next = currentBoost === 0 ? 10 : currentBoost === 10 ? 100 : 0
+    return `Current: +${currentBoost} base clicks. Click to switch to +${next}.`
   }
   
   return (
     <button 
       className="mode-toggle-button" 
       onClick={handleToggle}
-      title={`Current mode: ${currentMode}. Click to switch to ${currentMode === 'testing' ? 'production' : 'testing'} mode.`}
+      title={getTooltipText()}
     >
-      {currentMode === 'testing' ? 'Testing' : 'Production'}
+      {getButtonText()}
     </button>
   )
 }

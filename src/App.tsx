@@ -3,7 +3,7 @@ import { UpgradeList } from './components/UpgradeList'
 import { GeneratorList } from './components/GeneratorList'
 import { PrestigeButton } from './components/PrestigeButton'
 import { StrategyPointsGauge } from './components/StrategyPointsGauge'
-import { GameModeToggle } from './components/GameModeToggle'
+import { BaseClickToggle } from './components/GameModeToggle'
 import { useCurrency, useViews, useEngagement, usePrestigePoints, useViewsPerSecond, useTotalClicksPerSecond, useGameActions } from './stores/gameStore'
 import { formatNumber } from './utils/numberFormatter'
 import { getRateColorClass, formatRate } from './utils/rateColors'
@@ -32,7 +32,7 @@ function App() {
   return (
     <div className="app">
       <div className="top-buttons">
-        <GameModeToggle />
+        <BaseClickToggle />
         <button className="reset-button" onClick={handleReset}>
           Reset
         </button>

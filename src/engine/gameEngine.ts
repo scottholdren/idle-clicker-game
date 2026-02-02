@@ -10,16 +10,16 @@ import type {
   SaveData,
   GameSettings
 } from '../types/gameTypes'
-import { useGameStore, getGameMode } from '../stores/gameStore'
-import { decimal, add, multiply, greaterThanOrEqual, calculateStrategyPointsMultiplier, ZERO, ONE } from '../utils/decimal'
+import { useGameStore, getBaseClickBoost } from '../stores/gameStore'
+import { decimal, add, multiply, greaterThanOrEqual, calculateStrategyPointsMultiplier, calculateViewToClickEfficiency, ZERO, ONE } from '../utils/decimal'
 import { UpgradeManager } from '../managers/UpgradeManager'
 import { IdleManager } from '../managers/IdleManager'
 
 /**
- * Get prestige threshold based on game mode
+ * Get prestige threshold - fixed at production value
  */
 const getPrestigeThreshold = () => {
-  return getGameMode() === 'testing' ? 1000 : 50000 // Testing: 1K, Production: 50K
+  return 50000 // Production value
 }
 
 /**
@@ -128,6 +128,12 @@ export class GameEngine implements IGameEngine {
     // Calculate base click value with multipliers
     let clickValue = multiply(state.baseClickValue, state.clickMultiplier)
     
+    // Add base click boost for testing
+    const baseBoost = getBaseClickBoost()
+    if (baseBoost > 0) {
+      clickValue = clickValue.plus(baseBoost)
+    }
+    
     // Apply strategy points bonus
     const strategyBonus = calculateStrategyPointsMultiplier(state.prestigePoints)
     clickValue = multiply(clickValue, strategyBonus)
@@ -160,12 +166,14 @@ export class GameEngine implements IGameEngine {
     // In Digital Decay, idle generators produce Views (tier 2 currency)
     const newViews = state.views.plus(earnings) // Don't floor here, let Views accumulate as decimals internally
     
-    // Calculate how many Clicks we should have based on total Views
-    const totalClicksFromViews = newViews.dividedBy(10).floor()
+    // Calculate view-to-click efficiency based on total earned clicks and prestige multiplier
+    const efficiency = calculateViewToClickEfficiency(state.totalEarned, strategyBonus)
+    
+    // Calculate how many Clicks we should have based on total Views with efficiency
+    const totalClicksFromViews = newViews.times(efficiency).floor()
     
     // Calculate how many Clicks we already have from previous Views
-    // We need to track this to avoid double-counting
-    const currentClicksFromViews = state.views.dividedBy(10).floor()
+    const currentClicksFromViews = state.views.times(efficiency).floor()
     
     // Only add the new Clicks from the new Views
     const newClicksToAdd = totalClicksFromViews.minus(currentClicksFromViews)
@@ -763,19 +771,7 @@ export class GameEngine implements IGameEngine {
     this.getStore().updateSettings(settings)
   }
 
-  /**
-   * Refresh game data for new mode (call after changing game mode)
-   */
-  public refreshGameMode(): void {
-    const state = this.getGameState()
-    
-    // Refresh upgrades and generators with new mode values
-    this.upgradeManager.refreshUpgrades(state)
-    this.idleManager.refreshGenerators(state)
-    
-    // Update the store with refreshed state
-    this.getStore().setGameState(state)
-  }
+
 
   /**
    * Reset game

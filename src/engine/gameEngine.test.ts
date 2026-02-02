@@ -9,7 +9,6 @@ vi.mock('../stores/gameStore', () => ({
   useGameStore: {
     getState: vi.fn(),
   },
-  getGameMode: vi.fn(() => 'testing'), // Add getGameMode mock
 }))
 
 describe('GameEngine', () => {
