@@ -21,7 +21,7 @@ describe('GameEngine', () => {
       gameState: {
         currency: ZERO, // Clicks
         views: ZERO, // Views
-        engagement: ONE, // Engagement multiplier
+        engagement: 1, // Engagement level
         influence: ZERO, // Influence
         totalClicks: 0,
         totalEarned: ZERO,

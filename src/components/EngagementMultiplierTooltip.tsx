@@ -15,10 +15,12 @@ export const EngagementMultiplierTooltip: React.FC<EngagementMultiplierTooltipPr
   const baseClickValue = gameState.baseClickValue
   const clickMultiplier = gameState.clickMultiplier
   const strategyBonus = calculateStrategyPointsMultiplier(gameState.prestigePoints)
+  const engagementMultiplier = gameState.engagement
   
   // Calculate intermediate values
   const baseMultiplier = baseClickValue.times(clickMultiplier)
-  const totalMultiplier = baseMultiplier.times(strategyBonus)
+  const afterStrategy = baseMultiplier.times(strategyBonus)
+  const totalMultiplier = afterStrategy.times(engagementMultiplier)
   
   const tooltipContent = (
     <div className="tooltip-content">
@@ -37,6 +39,10 @@ export const EngagementMultiplierTooltip: React.FC<EngagementMultiplierTooltipPr
           <div className="tooltip-breakdown-item">
             <span className="tooltip-breakdown-label">Strategy Points Bonus:</span>
             <span className="tooltip-breakdown-value">x{formatNumber(strategyBonus)}</span>
+          </div>
+          <div className="tooltip-breakdown-item">
+            <span className="tooltip-breakdown-label">Engagement Multiplier:</span>
+            <span className="tooltip-breakdown-value">x{formatNumber(engagementMultiplier)}</span>
           </div>
         </div>
       </div>

@@ -27,5 +27,17 @@ export const getInitialIdleGenerators = (): IdleGenerator[] => [
     owned: 0,
     unlocked: false,
     unlockCondition: (gameState) => decimal(gameState.totalEarned).greaterThanOrEqualTo(decimal(500)),
+  },
+  
+  {
+    id: 'recommendation-engine',
+    name: 'Recommendation Engine',
+    description: 'Algorithmic content recommendations that scale with strategy',
+    baseProduction: decimal(100), // 100 views per second base
+    baseCost: decimal(50000),
+    costMultiplier: decimal(1.15),
+    owned: 0,
+    unlocked: false,
+    unlockCondition: (gameState) => decimal(gameState.prestigePoints).greaterThan(decimal(0)),
   }
 ]

@@ -1,0 +1,60 @@
+.dimension-shift-button {
+  padding: 1rem 1.5rem;
+  border: 2px solid;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  font-family: inherit;
+  min-width: 200px;
+}
+
+.dimension-shift-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.dimension-shift-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.dimension-shift-available {
+  border-color: #4caf50;
+  color: #4caf50;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.dimension-shift-available:hover {
+  background: rgba(76, 175, 80, 0.2);
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.4);
+}
+
+.dimension-shift-return {
+  border-color: #2196f3;
+  color: #2196f3;
+}
+
+.dimension-shift-return:hover {
+  background: rgba(33, 150, 243, 0.2);
+  transform: scale(1.05);
+}
+
+.dimension-shift-locked {
+  border-color: #666;
+  color: #666;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+  }
+}

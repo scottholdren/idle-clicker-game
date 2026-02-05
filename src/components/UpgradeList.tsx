@@ -2,7 +2,7 @@ import React from 'react'
 import type { Upgrade } from '../types/gameTypes'
 import { useVisibleUpgrades, useCurrency } from '../stores/gameStore'
 import { gameEngine } from '../engine/gameEngine'
-import { formatNumber } from '../utils/numberFormatter'
+import { formatNumber, formatInteger } from '../utils/numberFormatter'
 import { decimal, calculateStrategyPointsMultiplier } from '../utils/decimal'
 import EngagementMultiplierTooltip from './EngagementMultiplierTooltip'
 
@@ -41,7 +41,7 @@ const UpgradeItem: React.FC<UpgradeItemProps> = ({ upgrade, canAfford, onPurchas
                 onClick={() => onPurchase(upgrade.id)}
                 disabled={!canAfford}
               >
-                Buy for {formatNumber(cost)} clicks
+                Buy for {formatInteger(cost)} clicks
               </button>
               {maxAffordable > 1 && (
                 <button 
@@ -59,7 +59,7 @@ const UpgradeItem: React.FC<UpgradeItemProps> = ({ upgrade, canAfford, onPurchas
           )}
         </div>
         <div className="upgrade-level">
-          {upgrade.currentPurchases}/{upgrade.maxPurchases}
+          {formatInteger(upgrade.currentPurchases)}/{formatInteger(upgrade.maxPurchases)}
         </div>
       </div>
       
@@ -71,8 +71,8 @@ const UpgradeItem: React.FC<UpgradeItemProps> = ({ upgrade, canAfford, onPurchas
               <span style={{ color: '#888888' }}>Level: </span>
               <span style={{ color: '#4caf50' }}>
                 {cumulativeEffect.type.includes('Multiplier') ? 
-                  `${formatNumber(cumulativeEffect.value)}x` :
-                  `+${formatNumber(cumulativeEffect.value)}`}
+                  `x${formatInteger(cumulativeEffect.value)}` :
+                  `+${formatInteger(cumulativeEffect.value)}`}
               </span>
             </div>
           ) : (

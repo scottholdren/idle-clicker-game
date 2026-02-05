@@ -4,11 +4,16 @@ import Decimal from 'decimal.js'
  * Core game state interface
  */
 export interface GameState {
-  // Digital Decay 4-tier currency system
+  // Current dimension (1, 2, or 3)
+  currentDimension: 1 | 2 | 3
+  
+  // Dimension 1: Content (YouTube Creator)
   currency: Decimal // Tier 1: Clicks - base currency from manual clicking
   views: Decimal // Tier 2: Views - passive resource from generators
-  engagement: Decimal // Tier 3: Engagement - emotional response multiplier
-  influence: Decimal // Tier 4: Influence - meta-progression currency
+  engagement: number // Permanent multiplier level for Dim 1 only (purchased with SP, starts at 1)
+  
+  // Dimension 2: Influence (Corporate) - placeholder for future
+  influence: Decimal // Dim 2 prestige currency (not yet implemented)
   
   // Basic game data
   totalClicks: number
@@ -55,6 +60,9 @@ export interface GameState {
   
   // Temporary effects
   temporaryEffects: TemporaryEffect[]
+  
+  // Bot simulation speed (1 = normal, 100 = 100x speed)
+  simulationSpeed: number
   
   // Settings
   settings: GameSettings
@@ -232,10 +240,13 @@ export interface SaveData {
  * Serializable game state (for save/load)
  */
 export interface SerializableGameState {
+  // Current dimension
+  currentDimension: 1 | 2 | 3
+  
   // Convert Decimals to strings and Sets to arrays for JSON serialization
   currency: string // Clicks
   views: string // Views
-  engagement: string // Engagement
+  engagement: number // Engagement level
   influence: string // Influence
   
   totalClicks: number
@@ -273,6 +284,8 @@ export interface SerializableGameState {
   unlockedAchievements: string[]
   
   temporaryEffects: SerializableTemporaryEffect[]
+  
+  simulationSpeed: number
   
   settings: GameSettings
 }

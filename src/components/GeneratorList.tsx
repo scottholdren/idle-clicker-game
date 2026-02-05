@@ -1,13 +1,11 @@
-import React from 'react'
-import { useGenerators, useCurrency, useGameActions, useViewsPerSecond, useClicksPerSecondFromViews } from '../stores/gameStore'
+import { useGenerators, useGameActions, useViewsPerSecond, useClicksPerSecondFromViews } from '../stores/gameStore'
 import { gameEngine } from '../engine/gameEngine'
-import { formatNumber } from '../utils/numberFormatter'
+import { formatNumber, formatInteger } from '../utils/numberFormatter'
 import { decimal, calculateStrategyPointsMultiplier } from '../utils/decimal'
 import TrafficSourcesTooltip from './TrafficSourcesTooltip'
 
 export function GeneratorList() {
   const generators = useGenerators()
-  const currency = useCurrency()
   const { setGameState } = useGameActions()
   const baseViewsPerSecond = useViewsPerSecond()
   const baseClicksPerSecondFromViews = useClicksPerSecondFromViews()
@@ -57,6 +55,8 @@ export function GeneratorList() {
             const cost = gameEngine.getGeneratorCost(generator, 1)
             const canAfford = gameEngine.canAffordGenerator(generator, 1)
             const maxAffordable = gameEngine.getMaxAffordableGenerators(generator)
+            
+            // Calculate production per second
             const productionPerSecond = decimal(generator.baseProduction).times(generator.owned || 0)
 
             return (
@@ -73,7 +73,7 @@ export function GeneratorList() {
                         onClick={() => handlePurchase(generator.id)}
                         disabled={!canAfford}
                       >
-                        Buy for {formatNumber(cost)} clicks
+                        Buy for {formatInteger(cost)} clicks
                       </button>
                       {maxAffordable > 1 && (
                         <button
@@ -87,17 +87,19 @@ export function GeneratorList() {
                     </div>
                   </div>
                   <div className="generator-owned">
-                    Owned: {generator.owned}
+                    Owned: {formatInteger(generator.owned)}
                   </div>
                 </div>
                 
                 <div className="generator-details-row">
-                  <p className="generator-description">{generator.description}</p>
+                  <p className="generator-description">
+                    {generator.description} ({formatNumber(generator.baseProduction)}/sec each)
+                  </p>
                   <div className="generator-stats">
                     <div className="generator-production">
                       <span style={{ color: '#888888' }}>Traffic: </span>
                       <span style={{ color: generator.owned > 0 ? '#4caf50' : '#888888' }}>
-                        {formatNumber(productionPerSecond)}/sec
+                        {formatInteger(productionPerSecond)}/sec
                       </span>
                     </div>
                   </div>

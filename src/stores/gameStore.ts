@@ -22,7 +22,7 @@ const DEFAULT_SETTINGS: GameSettings = {
 /**
  * Base click boost for testing/debugging
  */
-export type BaseClickMode = 0 | 10 | 100
+export type BaseClickMode = 0 | 10 | 100 | 1000 | 10000
 
 /**
  * Current base click boost - starts at 0 for normal gameplay
@@ -48,7 +48,9 @@ export const cycleBaseClickBoost = (): BaseClickMode => {
   switch (currentBaseClickBoost) {
     case 0: currentBaseClickBoost = 10; break
     case 10: currentBaseClickBoost = 100; break
-    case 100: currentBaseClickBoost = 0; break
+    case 100: currentBaseClickBoost = 1000; break
+    case 1000: currentBaseClickBoost = 10000; break
+    case 10000: currentBaseClickBoost = 0; break
   }
   return currentBaseClickBoost
 }
@@ -60,11 +62,16 @@ function createInitialGameState(): GameState {
   const now = Date.now()
   
   return {
-    // Digital Decay 4-tier currency system
+    // Current dimension
+    currentDimension: 1,
+    
+    // Dimension 1: Content (YouTube Creator)
     currency: ZERO, // Clicks - starts at 0
     views: ZERO, // Views - starts at 0
-    engagement: ONE, // Engagement - starts at 1x multiplier
-    influence: ZERO, // Influence - starts at 0
+    engagement: 1, // Engagement level - starts at 1 (x1 multiplier)
+    
+    // Dimension 2: Influence (Corporate) - placeholder
+    influence: ZERO, // Influence - not yet implemented
     
     // Basic game data
     totalClicks: 0,
@@ -112,6 +119,9 @@ function createInitialGameState(): GameState {
     // Temporary effects
     temporaryEffects: [],
     
+    // Bot simulation speed (1 = normal speed)
+    simulationSpeed: 1,
+    
     // Settings
     settings: { ...DEFAULT_SETTINGS },
   }
@@ -122,9 +132,10 @@ function createInitialGameState(): GameState {
  */
 function serializeGameState(state: GameState): SerializableGameState {
   return {
+    currentDimension: state.currentDimension || 1, // Default to Dim 1
     currency: state.currency.toString(),
     views: state.views.toString(),
-    engagement: state.engagement.toString(),
+    engagement: state.engagement,
     influence: state.influence.toString(),
     
     totalClicks: state.totalClicks,
@@ -207,6 +218,8 @@ function serializeGameState(state: GameState): SerializableGameState {
       value: effect.value.toString(),
     })),
     
+    simulationSpeed: state.simulationSpeed,
+    
     settings: state.settings,
   }
 }
@@ -216,9 +229,10 @@ function serializeGameState(state: GameState): SerializableGameState {
  */
 function deserializeGameState(serialized: SerializableGameState): GameState {
   return {
+    currentDimension: serialized.currentDimension || 1, // Default to Dim 1 for old saves
     currency: decimal(serialized.currency),
     views: decimal(serialized.views || '0'), // Default to 0 for backward compatibility
-    engagement: decimal(serialized.engagement || '1'), // Default to 1 for backward compatibility
+    engagement: serialized.engagement || 1, // Default to 1 for backward compatibility
     influence: decimal(serialized.influence || '0'), // Default to 0 for backward compatibility
     
     totalClicks: serialized.totalClicks,
@@ -347,6 +361,8 @@ function deserializeGameState(serialized: SerializableGameState): GameState {
       remove: () => {}, // Will be restored by game engine
     })),
     
+    simulationSpeed: serialized.simulationSpeed || 1, // Default to normal speed
+    
     settings: serialized.settings,
   }
 }
@@ -362,7 +378,7 @@ interface GameStore {
   updateCurrency: (amount: Decimal) => void
   setCurrency: (amount: Decimal) => void
   updateViews: (amount: Decimal) => void
-  updateEngagement: (amount: Decimal) => void
+  setEngagement: (level: number) => void
   updateInfluence: (amount: Decimal) => void
   addClicks: (count: number) => void
   addManualClick: () => void
@@ -422,11 +438,11 @@ export const useGameStore = create<GameStore>()(
         }))
       },
 
-      updateEngagement: (amount: Decimal) => {
+      setEngagement: (level: number) => {
         set((state) => ({
           gameState: {
             ...state.gameState,
-            engagement: decimal(state.gameState.engagement).plus(amount),
+            engagement: level,
             lastActiveTime: Date.now(),
           },
         }))
@@ -560,9 +576,10 @@ export const useGameStore = create<GameStore>()(
         // Ensure all Decimal fields are proper Decimal objects and temporaryEffects exists
         return {
           ...gameState,
+          currentDimension: gameState.currentDimension || 1, // Default to Dim 1
           currency: decimal(gameState.currency || 0),
           views: decimal(gameState.views || 0),
-          engagement: decimal(gameState.engagement || 1),
+          engagement: gameState.engagement || 1,
           influence: decimal(gameState.influence || 0),
           totalEarned: decimal(gameState.totalEarned || 0),
           baseClickValue: decimal(gameState.baseClickValue || 1),
@@ -576,7 +593,23 @@ export const useGameStore = create<GameStore>()(
       },
       
       setGameState: (gameState: GameState) => {
-        set({ gameState })
+        // Create a new reference for arrays to trigger React re-renders
+        set({ 
+          gameState: {
+            ...gameState,
+            upgrades: [...gameState.upgrades],
+            idleGenerators: [...gameState.idleGenerators],
+          }
+        })
+      },
+      
+      setSimulationSpeed: (speed: number) => {
+        set((state) => ({
+          gameState: {
+            ...state.gameState,
+            simulationSpeed: speed
+          }
+        }))
       },
     }),
     {
@@ -590,9 +623,10 @@ export const useGameStore = create<GameStore>()(
           // Ensure the persisted state has proper Decimal objects
           const safeGameState = {
             ...persistedState.gameState,
+            currentDimension: persistedState.gameState.currentDimension || 1, // Default to Dim 1
             currency: decimal(persistedState.gameState.currency || 0),
             views: decimal(persistedState.gameState.views || 0),
-            engagement: decimal(persistedState.gameState.engagement || 1),
+            engagement: persistedState.gameState.engagement || 1,
             influence: decimal(persistedState.gameState.influence || 0),
             totalEarned: decimal(persistedState.gameState.totalEarned || 0),
             baseClickValue: decimal(persistedState.gameState.baseClickValue || 1),
@@ -602,6 +636,7 @@ export const useGameStore = create<GameStore>()(
             metaPrestigePoints: decimal(persistedState.gameState.metaPrestigePoints || 0),
             recentClicks: persistedState.gameState.recentClicks || [], // Ensure recentClicks exists
             temporaryEffects: persistedState.gameState.temporaryEffects || [], // Ensure temporaryEffects exists
+            simulationSpeed: persistedState.gameState.simulationSpeed || 1, // Default to normal speed
           }
           
           return {
@@ -632,6 +667,7 @@ export const useTotalEarned = () => useGameStore((state) => state.gameState.tota
 export const useMetaPrestigePoints = () => useGameStore((state) => state.gameState.metaPrestigePoints)
 export const useAchievements = () => useGameStore((state) => state.gameState.achievements)
 export const useAutomation = () => useGameStore((state) => state.gameState.automationSystems)
+export const useGameState = () => useGameStore((state) => state.gameState)
 
 /**
  * Derived selectors for upgrades
@@ -680,7 +716,7 @@ export const useClicksPerSecondFromViews = () => {
   
   // Calculate view-to-click efficiency based on total earned clicks and prestige multiplier
   const strategyBonus = calculateStrategyPointsMultiplier(gameState.prestigePoints)
-  const efficiency = calculateViewToClickEfficiency(gameState.totalEarned, strategyBonus)
+  const efficiency = calculateViewToClickEfficiency(gameState.totalEarned, strategyBonus, gameState.engagement)
   
   // Views convert to Clicks based on efficiency
   return viewsPerSecond.times(efficiency)
@@ -697,15 +733,25 @@ export const useTotalClicksPerSecond = () => {
   const now = Date.now()
   const recentClicks = gameState.recentClicks || [] // Safety check for undefined
   const recentClicksInWindow = recentClicks.filter(timestamp => now - timestamp <= 2000)
-  const manualClickRate = decimal(recentClicksInWindow.length).dividedBy(2) // clicks per second over 2 seconds
+  const rawManualClickRate = decimal(recentClicksInWindow.length).dividedBy(2) // raw clicks per second
+  
+  // Calculate the actual currency value per manual click (including all multipliers)
+  const baseClickValue = gameState.baseClickValue
+  const clickMultiplier = gameState.clickMultiplier
+  const strategyBonus = calculateStrategyPointsMultiplier(gameState.prestigePoints)
+  const valuePerClick = baseClickValue.times(clickMultiplier).times(strategyBonus)
+  
+  // Manual click rate in currency per second
+  const manualClickRate = rawManualClickRate.times(valuePerClick)
   
   // Combine manual clicks with passive sources
   let totalClickRate = clicksFromViews.plus(manualClickRate)
   
-  // Add automation systems if any
+  // Add automation systems if any (they also need to use the multiplied value)
   for (const automation of gameState.automationSystems) {
     if (automation.owned > 0) {
-      const automationRate = decimal(automation.clicksPerSecond).times(automation.owned)
+      const rawAutomationRate = decimal(automation.clicksPerSecond).times(automation.owned)
+      const automationRate = rawAutomationRate.times(valuePerClick) // Apply same multipliers
       totalClickRate = totalClickRate.plus(automationRate)
     }
   }
@@ -725,6 +771,7 @@ export const useGameActions = () => {
     addManualClick: store.addManualClick,
     updateLastActiveTime: store.updateLastActiveTime,
     updateSettings: store.updateSettings,
+    updateInfluence: store.updateInfluence,
     resetGame: store.resetGame,
     saveGame: store.saveGame,
     loadGame: store.loadGame,

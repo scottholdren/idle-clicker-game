@@ -3,7 +3,7 @@ import { gameEngine } from '../engine/gameEngine'
 import { useCurrency, useTotalClicksPerSecond } from '../stores/gameStore'
 import { useClickMultiplierEffects } from '../hooks/useTemporaryEffects'
 import { TemporaryEffectProgressBar } from './TemporaryEffectProgressBar'
-import { formatNumber } from '../utils/numberFormatter'
+import { formatNumber, formatInteger } from '../utils/numberFormatter'
 import { getRateColorClass, formatRate } from '../utils/rateColors'
 import { decimal } from '../utils/decimal'
 
@@ -106,16 +106,23 @@ export const ClickButton: React.FC<ClickButtonProps> = ({
         }}
       >
         <div className="card-header">Clicks</div>
-        <div className="card-value">{formatNumber(currency.floor())}</div>
+        <div className="card-value">{formatInteger(currency.floor())}</div>
         <div className={`card-footer ${getRateColorClass(totalClicksPerSecond)}`}>
-          {formatRate(totalClicksPerSecond.floor(), formatNumber)}
+          {formatRate(totalClicksPerSecond, formatNumber)}
         </div>
-        
-        {/* Progress bar for active temporary effects */}
-        {hasActiveEffect && (
-          <TemporaryEffectProgressBar effects={activeClickEffects} />
-        )}
       </div>
+
+      {/* Progress bar for active temporary effects - positioned at bottom */}
+      {hasActiveEffect && (
+        <TemporaryEffectProgressBar effects={activeClickEffects} />
+      )}
+
+      {/* Effect text below the card */}
+      {hasActiveEffect && (
+        <div className="effect-text-below">
+          {activeClickEffects[0]?.name} ×{formatNumber(activeClickEffects[0]?.value || decimal(1))} ({Math.ceil(Math.max(0, (activeClickEffects[0]?.startTime + activeClickEffects[0]?.duration - Date.now()) / 1000))}s)
+        </div>
+      )}
 
       {/* Floating numbers */}
       {showFloatingNumbers && floatingNumbers.map(num => (

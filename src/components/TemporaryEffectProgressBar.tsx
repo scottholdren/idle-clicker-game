@@ -79,9 +79,6 @@ export const TemporaryEffectProgressBar: React.FC<TemporaryEffectProgressBarProp
           style={{ width: `${progress}%` }}
         />
       </div>
-      <div className="progress-bar-text">
-        {effect.name} ×{formatNumber(effect.value)} ({timeRemaining}s)
-      </div>
     </div>
   )
 }

@@ -189,10 +189,12 @@ export class UpgradeManager {
     }
 
     if (!this.canAffordUpgrade(upgrade, gameState)) {
+      console.log(`[UpgradeManager] Cannot afford ${upgrade.name} - cost: ${this.getUpgradeCost(upgrade).toFixed(0)}, currency: ${gameState.currency.toFixed(0)}`)
       return false
     }
 
     const cost = this.getUpgradeCost(upgrade)
+    const beforePurchases = upgrade.currentPurchases
 
     try {
       // Deduct cost
@@ -203,6 +205,8 @@ export class UpgradeManager {
       
       // Update upgrade state
       upgrade.currentPurchases++
+      
+      console.log(`[UpgradeManager] Purchased ${upgrade.name}: ${beforePurchases} → ${upgrade.currentPurchases} (max: ${upgrade.maxPurchases})`)
       
       // Mark as purchased if it's a one-time upgrade
       if (upgrade.maxPurchases === 1) {

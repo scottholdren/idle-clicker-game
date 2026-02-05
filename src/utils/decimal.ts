@@ -202,18 +202,18 @@ export function calculateStrategyPointsMultiplier(prestigePoints: Decimal.Value)
  * Calculate view-to-click conversion efficiency based on total earned clicks
  * Base: 10% (1 click per 10 views)
  * Improves by 0.1% per 1000 total earned clicks
- * Prestige multiplier affects the efficiency gain rate
- * Soft capped at 50% (5 clicks per 10 views)
+ * Prestige multiplier and engagement affect the efficiency gain rate
+ * Soft capped at 50% (or 100% if engagement > 1)
  */
-export function calculateViewToClickEfficiency(totalEarned: Decimal.Value, prestigeMultiplier: Decimal.Value): Decimal {
+export function calculateViewToClickEfficiency(totalEarned: Decimal.Value, prestigeMultiplier: Decimal.Value, engagementLevel: number = 1): Decimal {
   const baseEfficiency = 0.1 // 10% base conversion rate
-  const maxEfficiency = 0.5 // 50% max conversion rate (soft cap)
+  const maxEfficiency = engagementLevel > 1 ? 1.0 : 0.5 // 100% cap if engagement > 1, otherwise 50%
   
-  // Calculate efficiency gain: 0.1% per 1000 total earned clicks, affected by prestige multiplier
+  // Calculate efficiency gain: 0.1% per 1000 total earned clicks, affected by prestige multiplier AND engagement
   const prestigeBonus = decimal(prestigeMultiplier)
   const totalEarnedNum = decimal(totalEarned).toNumber()
   const efficiencyGainPer1000 = 0.001 // 0.1%
-  const efficiencyGain = (totalEarnedNum / 1000) * efficiencyGainPer1000 * prestigeBonus.toNumber()
+  const efficiencyGain = (totalEarnedNum / 1000) * efficiencyGainPer1000 * prestigeBonus.toNumber() * engagementLevel
   
   // Apply soft cap
   const totalEfficiency = Math.min(baseEfficiency + efficiencyGain, maxEfficiency)

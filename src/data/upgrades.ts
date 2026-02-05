@@ -35,8 +35,8 @@ export const getInitialUpgrades = (): Upgrade[] => [
     id: 'click-power-3',
     name: 'Viral Moment',
     description: 'Temporarily boosts clicks by 5× for 10 seconds',
-    baseCost: decimal(2500),
-    costMultiplier: decimal(4.0),
+    baseCost: decimal(800),
+    costMultiplier: decimal(2.0),
     maxPurchases: 2,
     currentPurchases: 0,
     unlocked: false,
@@ -45,6 +45,13 @@ export const getInitialUpgrades = (): Upgrade[] => [
       type: 'special', // Special type for temporary effects
       value: decimal(5),
       apply: (gameState) => {
+        // Get simulation speed (default to 1 if not set)
+        const simulationSpeed = gameState.simulationSpeed || 1
+        
+        // Adjust duration based on simulation speed
+        // At 100x speed, 10 seconds of game time = 100ms of real time
+        const adjustedDuration = 10000 / simulationSpeed
+        
         // Create a temporary effect instead of permanent multiplier
         const temporaryEffect = {
           id: `viral-moment-${Date.now()}`,
@@ -52,11 +59,11 @@ export const getInitialUpgrades = (): Upgrade[] => [
           type: 'clickMultiplier' as const,
           value: decimal(5),
           startTime: Date.now(),
-          duration: 10000, // 10 seconds in milliseconds
-          apply: (state) => {
+          duration: adjustedDuration,
+          apply: (state: any) => {
             state.clickMultiplier = state.clickMultiplier.times(5)
           },
-          remove: (state) => {
+          remove: (state: any) => {
             state.clickMultiplier = state.clickMultiplier.dividedBy(5)
           }
         }
@@ -75,8 +82,8 @@ export const getInitialUpgrades = (): Upgrade[] => [
     id: 'click-power-1',
     name: 'Double Tap',
     description: 'Doubles your click generation (+100% clicks per click)',
-    baseCost: decimal(5000),
-    costMultiplier: decimal(3.0),
+    baseCost: decimal(1200),
+    costMultiplier: decimal(2.0),
     maxPurchases: 3,
     currentPurchases: 0,
     unlocked: false,

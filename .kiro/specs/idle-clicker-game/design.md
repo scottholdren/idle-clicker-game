@@ -1,42 +1,221 @@
-# Design Document: Idle Clicker Game
+# Design Document: Asymptote - An Idle System
+
+## Game Title & Theme
+
+**Asymptote: An Idle System** - A multi-dimensional idle game about approaching limits, diminishing returns, and the progression from authentic content creation through corporate optimization to tech oligarchy.
 
 ## Overview
 
-The idle clicker game will be built as a single-page web application using modern web technologies. The architecture prioritizes performance for large number calculations, smooth UI updates, and reliable state persistence. The game features a progression system that starts with pure clicking mechanics and gradually unlocks idle capabilities through prestige upgrades.
+Asymptote is a single-page web application featuring a three-dimension progression system. Each dimension represents a different stage of digital content evolution, with distinct aesthetics and mechanics. The core mechanic is the asymptote: players approach theoretical maximums in each dimension, experiencing diminishing returns that drive them to shift between dimensions to break through limits.
+
+## Three-Dimension Structure
+
+### Dimension 1: Content (YouTube Creator)
+**Theme**: Organic growth, authenticity, passion projects  
+**Aesthetic**: YouTube Studio analytics dashboard  
+**Visual Style**: 
+- Card-based layout with metrics
+- Line graphs showing growth
+- Clean, modern, creator-friendly
+- YouTube-inspired color palette
+
+**Currencies**:
+- **Clicks** (Tier 1): Base currency from manual clicking
+- **Views** (Tier 2): Passive resource from generators
+- **Strategy Points (SP)** (Prestige): Earned through prestige resets
+
+**Meta-Progression**:
+- **Engagement**: Permanent multiplier that grows from SP
+- Growth rate: `0.1 × SP per hour`
+- Applies only to Dimension 1
+- Never resets, even through meta-prestige
+
+**Generators** (Traffic Sources):
+- Click Bot
+- Script Farm
+- Recommendation Engine
+
+**Upgrades**:
+- Better Content (base value)
+- Double Tap (click multiplier)
+- Viral Moment (temporary boost)
+
+**Asymptote**: ~1000 SP  
+**Formula**: `(totalEarned / 50000)^0.6`  
+**Unlock Dimension 2**: Reach 100 SP
+
+---
+
+### Dimension 2: Influence (Corporate Machine)
+**Theme**: Monetization, optimization, growth hacking, algorithms  
+**Aesthetic**: Microsoft/LinkedIn corporate sterile  
+**Visual Style**:
+- Sharp edges, grid-based layouts
+- Flat design, no personality
+- Corporate sans-serif fonts
+- Lots of whitespace
+- "Professional" stock photo energy
+
+**Color Palette**:
+- Primary: `#0078d4` (Microsoft blue)
+- Secondary: `#106ebe` (darker blue)
+- Accent: `#00b294` (teal/success green)
+- Background: `#f3f2f1` (corporate gray)
+
+**Currencies**:
+- **Impressions** (Tier 1): Manual actions ("buying ads")
+- **Reach** (Tier 2): Passive from generators
+- **Influence Points (IP)** (Prestige): Earned through prestige
+
+**Meta-Progression**:
+- **Authority**: Permanent multiplier that grows from IP
+- Growth rate: `0.1 × IP per hour`
+- Applies only to Dimension 2
+- Never resets
+
+**Cross-Dimension Effect**:
+- **Influence → Dimension 1**: Boosts SP generation
+- Formula: `SP = (totalEarned / 50000)^0.6 × (1 + Influence × 0.1)`
+- This breaks Dimension 1's asymptote
+
+**Generators** (Growth Mechanisms):
+- Ad Network
+- SEO Bot
+- Viral Algorithm
+- Influencer Partnership
+
+**Upgrades**:
+- Targeted Ads (base value)
+- A/B Testing (click multiplier)
+- Trending Boost (temporary boost)
+
+**UI Elements**:
+- Everything is a "card" with drop shadows
+- Buttons say "Optimize" and "Scale"
+- Metrics everywhere, dashboards, KPIs
+- Progress bars called "Performance Indicators"
+
+**Asymptote**: ~100 IP  
+**Formula**: `(totalEarned / threshold)^0.5`  
+**Unlock Dimension 3**: Reach 50 IP
+
+---
+
+### Dimension 3: Power (Tech Oligarchy)
+**Theme**: Monopoly, control, surveillance capitalism  
+**Aesthetic**: Faux-Friendly Evil (TBD - final aesthetic to be determined)  
+**Concept**: Looks like Google/Apple design but something feels *wrong*
+
+**Potential Aesthetic Direction**:
+- Pastel colors, rounded corners
+- Uncanny valley of UI design
+- "We're here to help" while clearly exploiting
+- Everything has friendly names masking evil intent
+
+**Currencies**:
+- **Control** (Tier 1): Manual actions ("acquisitions")
+- **Dominance** (Tier 2): Passive from generators
+- **Power Points (PP)** (Prestige): Earned through prestige
+
+**Meta-Progression**:
+- **Hegemony**: Permanent multiplier that grows from PP
+- Growth rate: `0.1 × PP per hour`
+- Applies only to Dimension 3
+- Never resets
+
+**Cross-Dimension Effect**:
+- **Power → Dimension 2**: Boosts IP generation
+- Formula: `IP = (totalEarned / threshold)^0.5 × (1 + Power × 0.1)`
+- **NO REVERSE EFFECT**: Nothing from Dim 3 helps Dim 1 or 2 directly
+
+**Generators** (Consolidation Mechanisms):
+- Market Manipulation
+- Regulatory Capture
+- Platform Monopoly
+- Data Harvesting
+
+**Upgrades**:
+- Hostile Takeover (base value)
+- Lobbying (click multiplier)
+- Crisis Exploitation (temporary boost)
+
+**UI Elements** (Conceptual):
+- "Personalized Experience" (surveillance)
+- "Community Guidelines" (censorship)
+- "Trusted Partners" (data brokers)
+- Everything looks helpful but isn't
+
+**Asymptote**: ~10 PP  
+**Formula**: `(totalEarned / threshold)^0.4` (harshest diminishing returns)  
+**Victory**: Reach 10 PP or narrative milestone
+
+---
+
+## The Asymptote Loop
+
+### Core Mechanic: Diminishing Returns
+Each dimension has an asymptotic curve. Progress becomes exponentially slower as you approach the theoretical maximum. Players must shift dimensions to break through these limits.
+
+### Optimal Strategy Loop
+```
+1. Farm Dimension 1 → Hit SP asymptote (~100 SP)
+2. Shift to Dimension 2 → Farm Influence
+3. Return to Dimension 1 → Blow past old SP limit (Influence breaks asymptote)
+4. Farm more SP → Grow Engagement faster
+5. Return to Dimension 2 → Farm more Influence (faster with Engagement)
+6. Unlock Dimension 3
+7. Enter Dimension 3 → Realize you're underpowered
+8. Cycle Dim 1 ⇄ Dim 2 to build up
+9. Return to Dimension 3 → Make progress
+10. Repeat until victory
+```
+
+### Player Journey Arc
+**Act 1: Discovery (Dimension 1)**
+- Learn basic mechanics
+- Hit SP asymptote
+- Unlock Dimension 2
+
+**Act 2: The Loop (Dim 1 ⇄ Dim 2)**
+- Cycle between dimensions
+- Optimize the loop
+- Build permanent power (Engagement)
+- Prepare for Dimension 3
+
+**Act 3: The Challenge (Dimension 3)**
+- Face the final dimension
+- Realize you need more power
+- Grind Dim 1 ⇄ Dim 2 to prepare
+- Return to Dim 3 and progress
+- Victory / Social commentary reveal
+
+---
 
 ## Architecture
 
 ### Technology Stack
 
 **Frontend Framework**: React with TypeScript
-- Provides excellent performance for frequent UI updates
-- Strong typing helps prevent calculation errors with large numbers
+- Excellent performance for frequent UI updates
+- Strong typing prevents calculation errors
 - Large ecosystem and community support
-- Excellent development tools and debugging capabilities
 
 **State Management**: Zustand
-- Lightweight and performant for frequent state updates
-- Simple API that works well with TypeScript
-- Built-in persistence capabilities for save/load functionality
-- No boilerplate compared to Redux
+- Lightweight and performant
+- Simple API with TypeScript support
+- Built-in persistence capabilities
 
 **Large Number Library**: decimal.js
-- Handles arbitrary precision arithmetic without overflow
-- Supports numbers far beyond JavaScript's Number.MAX_VALUE
+- Handles arbitrary precision arithmetic
+- Supports numbers beyond JavaScript's limits
 - Maintains precision for complex calculations
-- Well-tested and widely used in financial applications
 
 **Build Tool**: Vite
-- Fast development server with hot module replacement
+- Fast development server
 - Optimized production builds
 - Excellent TypeScript support
-- Modern ES modules support
 
 **Deployment**: Static hosting (Netlify/Vercel)
-- Simple deployment for static web applications
-- CDN distribution for fast loading
-- Automatic HTTPS and custom domain support
-- Easy integration with Git workflows
 
 ### System Architecture
 
@@ -44,202 +223,114 @@ The idle clicker game will be built as a single-page web application using moder
 graph TB
     UI[React UI Components] --> SM[Zustand State Manager]
     SM --> GE[Game Engine Core]
+    GE --> DM[Dimension Manager]
+    DM --> D1[Dimension 1: Content]
+    DM --> D2[Dimension 2: Influence]
+    DM --> D3[Dimension 3: Power]
     GE --> CH[Click Handler]
     GE --> IS[Idle System]
     GE --> UM[Upgrade Manager]
     GE --> PS[Prestige System]
-    GE --> MPS[Meta Prestige System]
-    GE --> AM[Automation Manager]
-    GE --> AS[Achievement System]
     GE --> NF[Number Formatter]
     GE --> SS[Save System]
     SS --> LS[Local Storage]
-    SS --> EI[Export/Import]
 ```
 
-## Components and Interfaces
+## Core Interfaces
 
-### Core Game Engine
+### Game State
 
 ```typescript
 interface GameState {
-  currency: Decimal;
-  totalClicks: number;
-  clickMultiplier: Decimal;
-  lastSaveTime: number;
-  lastActiveTime: number;
+  // Current dimension
+  currentDimension: 1 | 2 | 3;
   
-  // Idle system
-  idleGenerators: IdleGenerator[];
-  idleMultiplier: Decimal;
-  offlineProgressRate: number; // 0.0 to 1.0
-  maxOfflineHours: number;
+  // Dimension 1: Content
+  currency: Decimal; // Clicks
+  views: Decimal;
+  engagement: Decimal; // Permanent, Dim 1 only
   
-  // Upgrades
-  upgrades: Upgrade[];
-  purchasedUpgrades: Set<string>;
+  // Dimension 2: Influence (placeholder)
+  influence: Decimal; // Not yet implemented
+  
+  // Dimension 3: Power (placeholder)
+  // To be implemented
   
   // Prestige
-  prestigePoints: Decimal;
-  prestigeUpgrades: PrestigeUpgrade[];
-  purchasedPrestigeUpgrades: Set<string>;
+  prestigePoints: Decimal; // SP for current dimension
+  totalPrestiges: number;
   
-  // Meta prestige
-  metaPrestigePoints: Decimal;
-  metaPrestigeUpgrades: MetaPrestigeUpgrade[];
-  purchasedMetaPrestigeUpgrades: Set<string>;
+  // Core systems
+  idleGenerators: IdleGenerator[];
+  upgrades: Upgrade[];
+  temporaryEffects: TemporaryEffect[];
   
-  // Automation
-  automationSystems: AutomationSystem[];
+  // Persistence
+  lastSaveTime: number;
+  lastActiveTime: number;
+  simulationSpeed: number; // For bot simulation
   
-  // Achievements
-  achievements: Achievement[];
-  unlockedAchievements: Set<string>;
-}
-
-interface GameEngine {
-  // Core mechanics
-  performClick(): void;
-  updateIdleProgress(deltaTime: number): void;
-  calculateOfflineProgress(offlineTime: number): OfflineProgress;
-  
-  // Upgrade system
-  purchaseUpgrade(upgradeId: string): boolean;
-  canAffordUpgrade(upgrade: Upgrade): boolean;
-  
-  // Prestige system
-  canPrestige(): boolean;
-  performPrestige(): void;
-  calculatePrestigeGain(): Decimal;
-  
-  // Meta prestige system
-  canMetaPrestige(): boolean;
-  performMetaPrestige(): void;
-  calculateMetaPrestigeGain(): Decimal;
-  
-  // Save system
-  saveGame(): void;
-  loadGame(saveData: string): boolean;
-  exportSave(): string;
-  importSave(saveString: string): boolean;
-}
-```
-
-### Click Handler
-
-```typescript
-interface ClickHandler {
-  baseClickValue: Decimal;
-  clickMultipliers: Decimal[];
-  
-  processClick(): Decimal;
-  calculateClickValue(): Decimal;
-  addClickMultiplier(multiplier: Decimal): void;
-}
-```
-
-### Idle System
-
-```typescript
-interface IdleGenerator {
-  id: string;
-  name: string;
-  baseProduction: Decimal;
-  cost: Decimal;
-  costMultiplier: Decimal;
-  owned: number;
-  unlocked: boolean;
-}
-
-interface IdleSystem {
-  generators: IdleGenerator[];
-  globalMultiplier: Decimal;
-  offlineProgressRate: number;
-  maxOfflineHours: number;
-  
-  calculateTotalProduction(): Decimal;
-  updateProduction(deltaTime: number): Decimal;
-  calculateOfflineProduction(hours: number): Decimal;
-  purchaseGenerator(generatorId: string): boolean;
-}
-```
-
-### Number Formatter
-
-```typescript
-interface NumberFormatter {
-  format(value: Decimal, precision?: number): string;
-  formatRate(value: Decimal): string;
-  formatTime(seconds: number): string;
-  
-  // Format configurations
-  useScientificNotation: boolean;
-  scientificThreshold: Decimal;
-  suffixes: string[];
-}
-```
-
-## Data Models
-
-### Upgrade System
-
-```typescript
-interface Upgrade {
-  id: string;
-  name: string;
-  description: string;
-  cost: Decimal;
-  costMultiplier: Decimal;
-  maxPurchases: number;
-  currentPurchases: number;
-  unlockCondition: () => boolean;
-  effect: UpgradeEffect;
-}
-
-interface UpgradeEffect {
-  type: 'clickMultiplier' | 'idleMultiplier' | 'automation' | 'special';
-  value: Decimal;
-  apply(gameState: GameState): void;
-}
-```
-
-### Prestige System
-
-```typescript
-interface PrestigeUpgrade {
-  id: string;
-  name: string;
-  description: string;
-  cost: Decimal;
-  maxPurchases: number;
-  currentPurchases: number;
-  effect: PrestigeEffect;
-}
-
-interface PrestigeEffect {
-  type: 'offlineRate' | 'offlineTime' | 'globalMultiplier' | 'automation';
-  value: Decimal;
-  apply(gameState: GameState): void;
-}
-```
-
-### Save Data Structure
-
-```typescript
-interface SaveData {
-  version: string;
-  timestamp: number;
-  gameState: GameState;
   settings: GameSettings;
 }
+```
 
-interface GameSettings {
-  numberFormat: 'suffix' | 'scientific';
-  autoSave: boolean;
-  autoSaveInterval: number;
-  showTooltips: boolean;
+### Dimension Manager (Future)
+
+```typescript
+interface DimensionManager {
+  currentDimension: 1 | 2 | 3;
+  
+  shiftDimension(target: 1 | 2 | 3): boolean;
+  canShiftTo(target: 1 | 2 | 3): boolean;
+  
+  // Each dimension has its own state
+  getDimensionState(dim: 1 | 2 | 3): DimensionState;
 }
 ```
+
+## Engagement System (Dimension 1)
+
+### Growth Mechanics
+- **Source**: Strategy Points (SP)
+- **Rate**: `0.1 × SP per hour`
+- **Effect**: Multiplies all production in Dimension 1
+- **Persistence**: Never resets, even through meta-prestige
+
+### Examples
+- 10 SP: +1 engagement/hour
+- 100 SP: +10 engagement/hour
+- 1000 SP: +100 engagement/hour
+
+### Application
+```typescript
+// All Dimension 1 calculations
+finalValue = baseValue × (1 + 0.1 × SP) × Engagement
+```
+
+Engagement amplifies the SP multiplier, creating compound growth over time.
+
+## Implementation Status
+
+### Phase 1: Complete ✓
+- Dimension 1 fully functional
+- SP → Engagement growth implemented
+- Engagement applies only to Dimension 1
+- Infrastructure for multi-dimension system in place
+- Bot strategy updated for Dimension 1
+
+### Phase 2: Planned
+- Implement Dimension 2 (Influence)
+- Create dimension switching UI
+- Add Influence → SP boost mechanic
+- Apply corporate aesthetic
+
+### Phase 3: Planned
+- Implement Dimension 3 (Power)
+- Finalize aesthetic direction
+- Add social commentary elements
+- Victory conditions
+
+---
 
 ## Correctness Properties
 

@@ -14,7 +14,7 @@ describe('IdleManager', () => {
     mockGameState = {
       currency: decimal(100), // Clicks
       views: ZERO, // Views
-      engagement: ONE, // Engagement multiplier
+      engagement: 1, // Engagement level
       influence: ZERO, // Influence
       totalClicks: 0,
       totalEarned: ZERO,

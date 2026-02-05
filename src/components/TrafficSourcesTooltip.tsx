@@ -25,14 +25,17 @@ export const TrafficSourcesTooltip: React.FC<TrafficSourcesTooltipProps> = ({ ch
   // Apply multipliers
   const idleMultiplier = gameState.idleMultiplier
   const strategyBonus = calculateStrategyPointsMultiplier(gameState.prestigePoints)
+  const engagementLevel = gameState.engagement
   
-  // Calculate view-to-click efficiency based on total earned clicks and prestige multiplier
-  const efficiency = calculateViewToClickEfficiency(gameState.totalEarned, strategyBonus)
+  // Calculate view-to-click efficiency based on total earned clicks, prestige multiplier, and engagement
+  const efficiency = calculateViewToClickEfficiency(gameState.totalEarned, strategyBonus, engagementLevel)
   const efficiencyPercent = efficiency.times(100)
+  const maxEfficiency = engagementLevel > 1 ? 100 : 50
   
   // Calculate intermediate values
   const viewsAfterMultiplier = baseViewsPerSecond.times(idleMultiplier)
-  const totalViewsPerSecond = viewsAfterMultiplier.times(strategyBonus)
+  const viewsAfterStrategy = viewsAfterMultiplier.times(strategyBonus)
+  const totalViewsPerSecond = viewsAfterStrategy.times(engagementLevel)
   const clicksPerSecond = totalViewsPerSecond.times(efficiency)
   
   const tooltipContent = (
@@ -52,6 +55,10 @@ export const TrafficSourcesTooltip: React.FC<TrafficSourcesTooltipProps> = ({ ch
           <div className="tooltip-breakdown-item">
             <span className="tooltip-breakdown-label">Strategy Points Bonus:</span>
             <span className="tooltip-breakdown-value">x{formatNumber(strategyBonus)}</span>
+          </div>
+          <div className="tooltip-breakdown-item">
+            <span className="tooltip-breakdown-label">Engagement Multiplier:</span>
+            <span className="tooltip-breakdown-value">x{engagementLevel}</span>
           </div>
         </div>
       </div>
@@ -75,7 +82,7 @@ export const TrafficSourcesTooltip: React.FC<TrafficSourcesTooltipProps> = ({ ch
       
       <div className="tooltip-section">
         <div className="tooltip-description">
-          Traffic sources generate views passively. View-to-click efficiency improves by 0.1% per 1000 clicks (base: 10%, max: 50%).
+          Traffic sources generate views passively. View-to-click efficiency improves by 0.1% per 1000 clicks (base: 10%, max: {maxEfficiency}%). Engagement affects both the rate of efficiency gain and the maximum cap.
         </div>
       </div>
     </div>

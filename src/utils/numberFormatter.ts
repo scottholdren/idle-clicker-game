@@ -175,19 +175,14 @@ export class NumberFormatter {
       return this.formatWithSuffix(rounded, decimalPlaces)
     }
     
-    if (rounded.isInteger()) {
-      return rounded.toString()
-    }
-    
-    // Remove trailing zeros from decimal places
-    const formatted = rounded.toFixed(decimalPlaces)
-    return formatted.replace(/\.?0+$/, '')
+    // Always show exactly the specified number of decimal places for consistency
+    return rounded.toFixed(decimalPlaces)
   }
 
   /**
    * Format numbers with suffix notation (K, M, B, etc.)
    */
-  private formatWithSuffix(num: Decimal, decimalPlaces: number): string {
+  public formatWithSuffix(num: Decimal, decimalPlaces: number): string {
     // Find the appropriate suffix
     for (let i = SUFFIXES.length - 1; i >= 0; i--) {
       const suffix = SUFFIXES[i]
@@ -224,6 +219,56 @@ export const numberFormatter = new NumberFormatter()
  */
 export function formatNumber(value: Decimal.Value, precision?: number): string {
   return numberFormatter.format(value, precision)
+}
+
+export function formatInteger(value: Decimal.Value): string {
+  const num = decimal(value)
+  
+  // Handle zero
+  if (num.isZero()) {
+    return '0'
+  }
+  
+  // Handle negative numbers
+  if (num.isNegative()) {
+    return '-' + formatInteger(num.abs())
+  }
+  
+  // Floor the number to ensure it's an integer
+  const floored = num.floor()
+  
+  // Use suffix notation for large integers (with 2 decimal places)
+  if (floored.greaterThanOrEqualTo(1000)) {
+    return numberFormatter.formatWithSuffix(floored, 2)
+  } else {
+    // Raw numbers under 1000 - no decimal places
+    return floored.toString()
+  }
+}
+
+export function formatIntegerClean(value: Decimal.Value): string {
+  const num = decimal(value)
+  
+  // Handle zero
+  if (num.isZero()) {
+    return '0'
+  }
+  
+  // Handle negative numbers
+  if (num.isNegative()) {
+    return '-' + formatIntegerClean(num.abs())
+  }
+  
+  // Floor the number to ensure it's an integer
+  const floored = num.floor()
+  
+  // Use suffix notation for large integers (with 0 decimal places for clean display)
+  if (floored.greaterThanOrEqualTo(1000)) {
+    return numberFormatter.formatWithSuffix(floored, 0)
+  } else {
+    // Raw numbers under 1000 - no decimal places
+    return floored.toString()
+  }
 }
 
 export function formatRate(value: Decimal.Value): string {

@@ -45,6 +45,7 @@ export class IdleManager {
           decimal(generator.baseProduction),
           decimal(generator.owned)
         )
+        
         totalProduction = add(totalProduction, generatorProduction)
       }
     }
